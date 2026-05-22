@@ -20,7 +20,7 @@ export function ClarifyingQuestions({
     <div className="space-y-4">
       {questions.map((q, qi) => (
         <div key={qi} className="space-y-2">
-          <p className="text-sm font-medium text-slate-800">{q.question}</p>
+          <p className="text-sm font-medium text-zinc-200">{q.question}</p>
           <div className="space-y-2">
             {q.options.map((opt) => {
               const chosen = answers[qi] === opt.label
@@ -31,12 +31,12 @@ export function ClarifyingQuestions({
                   onClick={() => onSelect(qi, opt.label)}
                   className={`w-full rounded-xl border p-3 text-left transition active:scale-[0.99] ${
                     chosen
-                      ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'border-accent bg-accent/15 ring-1 ring-accent'
+                      : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]'
                   }`}
                 >
-                  <div className="text-sm font-medium text-slate-900">{opt.label}</div>
-                  <div className="mt-0.5 text-xs leading-relaxed text-slate-500">{opt.description}</div>
+                  <div className="text-sm font-medium text-zinc-100">{opt.label}</div>
+                  <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">{opt.description}</div>
                 </button>
               )
             })}

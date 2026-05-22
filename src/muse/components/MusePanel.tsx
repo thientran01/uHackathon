@@ -17,13 +17,13 @@ export function MusePanel({
 }) {
   const file = element.fileName ? element.fileName.split(/[\\/]/).pop() : null
   return (
-    // Entrance: grows out of the bottom-right (where the FAB sits). ease-out, 220ms.
-    <div className="pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right animate-muse-panel flex-col overflow-hidden rounded-2xl bg-white/95 shadow-2xl ring-1 ring-black/5 backdrop-blur motion-reduce:animate-none">
+    // Near-black tool surface. Entrance grows out of the bottom-right (the FAB).
+    <div className="pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right animate-muse-panel flex-col overflow-hidden rounded-2xl bg-ink/95 text-zinc-100 shadow-2xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl motion-reduce:animate-none">
       <header className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-slate-900">
-          <span className="text-violet-600">✦</span> Muse
+        <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-zinc-100">
+          <span className="text-accent">✦</span> Muse
           {mock && (
-            <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+            <span className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
               mock
             </span>
           )}
@@ -31,14 +31,14 @@ export function MusePanel({
         <button
           onClick={onClose}
           aria-label="Close"
-          className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          className="rounded-md p-1 text-zinc-500 transition hover:bg-white/5 hover:text-zinc-200"
         >
           ✕
         </button>
       </header>
 
-      <div className="flex items-center gap-2 border-y border-slate-100 bg-slate-50/70 px-4 py-2 text-xs text-slate-500">
-        <span className="rounded bg-white px-1.5 py-0.5 font-mono text-slate-700 ring-1 ring-slate-200">
+      <div className="flex items-center gap-2 border-y border-white/[0.07] bg-white/[0.02] px-4 py-2 text-xs text-zinc-500">
+        <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-zinc-300 ring-1 ring-white/10">
           &lt;{element.tag}&gt;
         </span>
         {file ? (
@@ -46,7 +46,7 @@ export function MusePanel({
             {file}:{element.line}
           </span>
         ) : (
-          <span className="text-amber-600">source not found</span>
+          <span className="text-amber-300/80">source not found</span>
         )}
       </div>
 

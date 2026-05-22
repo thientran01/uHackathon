@@ -3,6 +3,24 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica',
+          'Arial',
+          'sans-serif',
+        ],
+      },
+      colors: {
+        // Muse design system — near-black surfaces + one cobalt accent.
+        accent: { DEFAULT: '#3d63ff', hover: '#5577ff' },
+        ink: { DEFAULT: '#101013', soft: '#17171b' },
+      },
       // Muse motion — applied per Emil Kowalski's principles:
       // ease-out for entrances, custom curve, under 300ms, start scale > 0.
       keyframes: {

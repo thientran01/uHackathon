@@ -3,13 +3,11 @@ export function MuseFab({ active, onToggle }: { active: boolean; onToggle: () =>
     <button
       data-testid="muse-fab"
       onClick={onToggle}
-      className={`pointer-events-auto flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl ring-1 transition active:scale-[0.97] motion-reduce:active:scale-100 ${
-        active
-          ? 'bg-slate-900 text-white ring-black/10'
-          : 'bg-violet-600 text-white ring-violet-700/30 hover:bg-violet-500'
+      className={`pointer-events-auto flex items-center gap-2 rounded-full bg-ink-soft px-5 py-3 text-sm font-medium text-zinc-100 shadow-xl shadow-black/30 ring-1 transition active:scale-[0.97] motion-reduce:active:scale-100 ${
+        active ? 'ring-accent/60 hover:bg-ink' : 'ring-white/10 hover:bg-[#1f1f24]'
       }`}
     >
-      <span className="text-base leading-none">✦</span>
+      <span className={`text-base leading-none ${active ? 'text-zinc-400' : 'text-accent'}`}>✦</span>
       {active ? 'Cancel' : 'Design with Muse'}
     </button>
   )

@@ -33,7 +33,7 @@ export function MuseGallery() {
     <div className="min-h-screen bg-slate-50 px-8 py-10 font-sans text-slate-900">
       <header className="mx-auto mb-10 max-w-6xl">
         <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-          <span className="text-violet-600">✦</span> Muse — UI states
+          <span className="text-accent">✦</span> Muse — UI states
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-slate-500">
           Every component and step of the flow, with mock data. Edit the components in{' '}
