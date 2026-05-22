@@ -30,6 +30,9 @@ type Pending =
 
 const EXIT_MS = 170 // keep in sync with the muse-panel-out animation
 
+// Normalize a file path the way the server keys `originals` (forward slashes, no ./).
+const normPath = (p: string) => p.replace(/\\/g, '/').replace(/^\.\//, '')
+
 export function MuseOverlay() {
   const { active, setActive, hoverRect, hoverInfo, cursor, selection, setSelection, clearSelection } =
     useSelection()
@@ -44,16 +47,25 @@ export function MuseOverlay() {
   const [applied, setApplied] = useState(false)
   const [closing, setClosing] = useState(false)
   const closeTimer = useRef<number | null>(null)
+  const prevKeysRef = useRef<string[]>([])
 
-  // Reset the conversation whenever the selection changes.
+  // Reset the conversation when the SET of selected elements changes. Keep the
+  // typed intent when the user is only *removing* an element from the batch, so
+  // editing the selection mid-flow doesn't force a retype.
+  const selectionKey = selection.map((s) => s.key).sort().join('|')
   useEffect(() => {
-    setIntent('')
+    const keys = selection.map((s) => s.key)
+    const prev = prevKeysRef.current
+    const shrunk = keys.length < prev.length && keys.every((k) => prev.includes(k))
+    prevKeysRef.current = keys
     setMessages([])
     setPending(null)
     setAnswers({})
     setError(null)
     setApplied(false)
-  }, [selection])
+    if (!shrunk) setIntent('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectionKey])
 
   function requestClose() {
     if (closing) return
@@ -105,7 +117,17 @@ export function MuseOverlay() {
         setPending({ kind: 'ask', toolUseId: tu.id, questions: (tu.input as AskInput).questions })
       } else {
         const input = tu.input as ProposeInput
-        setPending({ kind: 'propose', toolUseId: tu.id, edits: input.edits, rationale: input.rationale })
+        // Bound writes to the files Muse actually read this turn (the selected
+        // elements' files) — never an arbitrary in-src file the model returns.
+        const allowed = new Set(Object.keys(resp.originals ?? {}))
+        const edits = (Array.isArray(input.edits) ? input.edits : [])
+          .map((e) => ({ fileName: normPath(e.fileName ?? ''), newContent: e.newContent }))
+          .filter((e) => typeof e.newContent === 'string' && allowed.has(e.fileName))
+        if (edits.length === 0) {
+          setError("Muse didn't return changes for the selected element(s). Try rephrasing.")
+          return
+        }
+        setPending({ kind: 'propose', toolUseId: tu.id, edits, rationale: input.rationale ?? '' })
       }
     } catch (e) {
       setError((e as Error).message)

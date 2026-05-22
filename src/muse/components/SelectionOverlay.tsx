@@ -73,7 +73,7 @@ export function SelectionMarkers({ elements }: { elements: SelectedElement[] }) 
   return (
     <>
       {elements.map((el, i) => {
-        if (!el.node) return null
+        if (!el.node || !el.node.isConnected) return null // skip detached nodes (e.g. after HMR)
         const r = el.node.getBoundingClientRect()
         return (
           <div key={el.key} className="pointer-events-none">
