@@ -31,6 +31,13 @@ export type ChatResponse = {
   error?: string
 }
 
+export type HistoryEntry = {
+  fileName: string
+  before: string
+  after: string
+  label: string
+}
+
 // Anthropic message shape we send back and forth.
 export type ChatMessage =
   | { role: 'user'; content: string }
