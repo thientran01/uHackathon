@@ -1,3 +1,4 @@
+import type { ElementInfo } from '../sourceLocation'
 import type { Rect } from '../useSelection'
 
 export function SelectBanner() {
@@ -8,13 +9,30 @@ export function SelectBanner() {
   )
 }
 
-export function HoverHighlight({ rect }: { rect: Rect }) {
+export function HoverHighlight({ rect, info }: { rect: Rect; info?: ElementInfo | null }) {
+  const move = 'transition-all duration-100 ease-in-out motion-reduce:transition-none'
   return (
-    <div
-      // On-screen movement between elements -> ease-in-out, fast. Instant for
-      // reduced-motion (it tracks the cursor, so no continuity is lost).
-      className="pointer-events-none absolute rounded-md bg-accent/10 ring-2 ring-accent transition-all duration-100 ease-in-out motion-reduce:transition-none"
-      style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
-    />
+    <>
+      {/* The highlight ring — glides between elements (on-screen movement -> ease-in-out). */}
+      <div
+        className={`pointer-events-none absolute rounded-md bg-accent/10 ring-2 ring-accent ${move}`}
+        style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
+      />
+      {/* Devtools/agentation-style label: component breadcrumb + tag "text". */}
+      {info && (
+        <div
+          className={`pointer-events-none absolute z-10 max-w-[260px] rounded-md bg-ink/95 px-2 py-1 font-mono text-[10.5px] leading-snug shadow-lg ring-1 ring-white/10 backdrop-blur ${move}`}
+          style={{ top: rect.top + 4, left: rect.left + 4 }}
+        >
+          {info.crumbs.length > 0 && (
+            <div className="text-zinc-500">{info.crumbs.map((c) => `<${c}>`).join(' ')}</div>
+          )}
+          <div className="truncate text-zinc-100">
+            {info.tag}
+            {info.text && <span className="text-zinc-500"> "{info.text}"</span>}
+          </div>
+        </div>
+      )}
+    </>
   )
 }

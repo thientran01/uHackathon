@@ -25,7 +25,8 @@ type Pending =
 const EXIT_MS = 170 // keep in sync with the muse-panel-out animation
 
 export function MuseOverlay() {
-  const { active, setActive, hoverRect, selected, setSelected, clearSelected } = useSelection()
+  const { active, setActive, hoverRect, hoverInfo, selected, setSelected, clearSelected } =
+    useSelection()
 
   const [intent, setIntent] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -133,7 +134,8 @@ export function MuseOverlay() {
   }
 
   const allAnswered =
-    pending?.kind === 'ask' && pending.questions.every((_, i) => answers[i] !== undefined)
+    pending?.kind === 'ask' &&
+    pending.questions.every((_, i) => (answers[i] ?? '').trim() !== '')
   const unmappable = !!selected && !selected.fileName
   const stepKey = unmappable
     ? 'unmappable'
@@ -184,7 +186,7 @@ export function MuseOverlay() {
 
   return (
     <div data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
-      {active && hoverRect && <HoverHighlight rect={hoverRect} />}
+      {active && hoverRect && <HoverHighlight rect={hoverRect} info={hoverInfo} />}
 
       {active && (
         <div className="absolute left-1/2 top-4 -translate-x-1/2">
