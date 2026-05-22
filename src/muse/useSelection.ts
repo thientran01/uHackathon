@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getSourceLocation } from './sourceLocation'
+import { getElementInfo, getSourceLocation, type ElementInfo } from './sourceLocation'
 import type { SelectedElement } from './types'
 
 export type Rect = { top: number; left: number; width: number; height: number }
@@ -23,6 +23,8 @@ function describe(el: Element): Omit<SelectedElement, 'fileName' | 'line'> {
 export function useSelection() {
   const [active, setActive] = useState(false)
   const [hoverRect, setHoverRect] = useState<Rect | null>(null)
+  const [hoverInfo, setHoverInfo] = useState<ElementInfo | null>(null)
+  const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const [selected, setSelected] = useState<SelectedElement | null>(null)
 
   const clearSelected = useCallback(() => setSelected(null), [])
@@ -30,17 +32,22 @@ export function useSelection() {
   useEffect(() => {
     if (!active) {
       setHoverRect(null)
+      setHoverInfo(null)
+      setCursor(null)
       return
     }
 
     const onMove = (e: MouseEvent) => {
+      setCursor({ x: e.clientX, y: e.clientY })
       const el = e.target as Element | null
       if (!el || isMuseUI(el)) {
         setHoverRect(null)
+        setHoverInfo(null)
         return
       }
       const r = el.getBoundingClientRect()
       setHoverRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+      setHoverInfo(getElementInfo(el))
     }
 
     const onClick = (e: MouseEvent) => {
@@ -64,15 +71,17 @@ export function useSelection() {
       if (e.key === 'Escape') setActive(false)
     }
 
+    document.body.classList.add('muse-selecting')
     document.addEventListener('mousemove', onMove, true)
     document.addEventListener('click', onClick, true)
     document.addEventListener('keydown', onKey, true)
     return () => {
+      document.body.classList.remove('muse-selecting')
       document.removeEventListener('mousemove', onMove, true)
       document.removeEventListener('click', onClick, true)
       document.removeEventListener('keydown', onKey, true)
     }
   }, [active])
 
-  return { active, setActive, hoverRect, selected, setSelected, clearSelected }
+  return { active, setActive, hoverRect, hoverInfo, cursor, selected, setSelected, clearSelected }
 }

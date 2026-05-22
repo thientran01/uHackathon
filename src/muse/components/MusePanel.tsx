@@ -5,6 +5,7 @@ export function MusePanel({
   element,
   mock = false,
   stepKey,
+  closing = false,
   onClose,
   children,
 }: {
@@ -12,13 +13,19 @@ export function MusePanel({
   mock?: boolean
   /** Changes per flow step so the body re-mounts and plays the step animation. */
   stepKey?: string
+  /** When true, plays the exit animation instead of the entrance. */
+  closing?: boolean
   onClose: () => void
   children: ReactNode
 }) {
   const file = element.fileName ? element.fileName.split(/[\\/]/).pop() : null
   return (
-    // Near-black tool surface. Entrance grows out of the bottom-right (the FAB).
-    <div className="pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right animate-muse-panel flex-col overflow-hidden rounded-2xl bg-ink/95 text-zinc-100 shadow-2xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl motion-reduce:animate-none">
+    // Near-black tool surface. Grows out of the bottom-right (the FAB); reverses on close.
+    <div
+      className={`pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right flex-col overflow-hidden rounded-2xl bg-ink/95 text-zinc-100 shadow-2xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl motion-reduce:animate-none ${
+        closing ? 'animate-muse-panel-out' : 'animate-muse-panel'
+      }`}
+    >
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-zinc-100">
           <span className="text-accent">✦</span> Muse
