@@ -48,6 +48,23 @@ function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body))
 }
 
+const MAX_WRITE_BYTES = 200_000 // sanity cap on model-proposed file content
+
+// Resolve a client-supplied path and confirm it truly lives inside <root>/src.
+// Uses realpath + path.relative rather than a string startsWith, which guards
+// against: prefix collisions (e.g. `src-evil/`), `..` traversal, symlink escapes,
+// and Windows case-insensitivity. Returns the canonical absolute path, or null.
+function resolveInSrc(root: string, fileName: unknown): string | null {
+  if (typeof fileName !== 'string' || fileName.length === 0) return null
+  const abs = path.resolve(fileName)
+  if (!fs.existsSync(abs)) return null
+  const srcDir = fs.realpathSync(path.resolve(root, 'src'))
+  const real = fs.realpathSync(abs)
+  const rel = path.relative(srcDir, real)
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return null
+  return real
+}
+
 export function musePlugin(): Plugin {
   let root = process.cwd()
   let apiKey = ''
@@ -75,9 +92,8 @@ export function musePlugin(): Plugin {
           }
 
           const { fileName, element, messages } = JSON.parse(await readBody(req))
-          const abs = path.resolve(fileName ?? '')
-          const srcDir = path.resolve(root, 'src')
-          if (!abs.startsWith(srcDir) || !fs.existsSync(abs)) {
+          const abs = resolveInSrc(root, fileName)
+          if (!abs) {
             return sendJson(res, 400, {
               error: `Refusing to read "${fileName}" — must be an existing file under src/.`,
             })
@@ -136,15 +152,19 @@ export function musePlugin(): Plugin {
         if (req.method !== 'POST') return next()
         try {
           const { fileName, newContent } = JSON.parse(await readBody(req))
-          const abs = path.resolve(fileName ?? '')
-          const srcDir = path.resolve(root, 'src')
-          if (!abs.startsWith(srcDir) || !fs.existsSync(abs)) {
+          const abs = resolveInSrc(root, fileName)
+          if (!abs) {
             return sendJson(res, 400, {
               error: `Refusing to write "${fileName}" — must be an existing file under src/.`,
             })
           }
           if (typeof newContent !== 'string' || newContent.length === 0) {
             return sendJson(res, 400, { error: 'newContent must be a non-empty string.' })
+          }
+          if (newContent.length > MAX_WRITE_BYTES) {
+            return sendJson(res, 400, {
+              error: `Refusing to write — proposed content exceeds ${MAX_WRITE_BYTES} bytes.`,
+            })
           }
           fs.writeFileSync(abs, newContent, 'utf8') // -> Vite HMR reloads
           return sendJson(res, 200, { ok: true })
