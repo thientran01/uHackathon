@@ -25,7 +25,7 @@ type Pending =
 const EXIT_MS = 170 // keep in sync with the muse-panel-out animation
 
 export function MuseOverlay() {
-  const { active, setActive, hoverRect, hoverInfo, selected, setSelected, clearSelected } =
+  const { active, setActive, hoverRect, hoverInfo, cursor, selected, setSelected, clearSelected } =
     useSelection()
 
   const [intent, setIntent] = useState('')
@@ -186,7 +186,7 @@ export function MuseOverlay() {
 
   return (
     <div data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
-      {active && hoverRect && <HoverHighlight rect={hoverRect} info={hoverInfo} />}
+      {active && hoverRect && <HoverHighlight rect={hoverRect} cursor={cursor} info={hoverInfo} />}
 
       {active && (
         <div className="absolute left-1/2 top-4 -translate-x-1/2">

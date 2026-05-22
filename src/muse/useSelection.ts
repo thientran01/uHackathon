@@ -24,6 +24,7 @@ export function useSelection() {
   const [active, setActive] = useState(false)
   const [hoverRect, setHoverRect] = useState<Rect | null>(null)
   const [hoverInfo, setHoverInfo] = useState<ElementInfo | null>(null)
+  const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const [selected, setSelected] = useState<SelectedElement | null>(null)
 
   const clearSelected = useCallback(() => setSelected(null), [])
@@ -32,10 +33,12 @@ export function useSelection() {
     if (!active) {
       setHoverRect(null)
       setHoverInfo(null)
+      setCursor(null)
       return
     }
 
     const onMove = (e: MouseEvent) => {
+      setCursor({ x: e.clientX, y: e.clientY })
       const el = e.target as Element | null
       if (!el || isMuseUI(el)) {
         setHoverRect(null)
@@ -80,5 +83,5 @@ export function useSelection() {
     }
   }, [active])
 
-  return { active, setActive, hoverRect, hoverInfo, selected, setSelected, clearSelected }
+  return { active, setActive, hoverRect, hoverInfo, cursor, selected, setSelected, clearSelected }
 }
