@@ -48,8 +48,8 @@ export function MuseOverlay() {
     if (!selected) return
     setLoading(true)
     setError(null)
-    setPending(null)
-    setAnswers({})
+    // Keep the current step (e.g. the questions) on screen while we wait, so the
+    // panel never flashes empty — the action button just shows its busy label.
     try {
       const resp = await museChat(selected, msgs)
       if (resp.error) {
@@ -66,6 +66,7 @@ export function MuseOverlay() {
         return
       }
       if (tu.name === 'ask_clarifying_questions') {
+        setAnswers({})
         setPending({ kind: 'ask', toolUseId: tu.id, questions: (tu.input as AskInput).questions })
       } else {
         setPending({ kind: 'propose', toolUseId: tu.id, ...(tu.input as ProposeInput) })
@@ -110,6 +111,11 @@ export function MuseOverlay() {
   const allAnswered =
     pending?.kind === 'ask' && pending.questions.every((_, i) => answers[i] !== undefined)
   const unmappable = !!selected && !selected.fileName
+  const stepKey = unmappable
+    ? 'unmappable'
+    : messages.length === 0
+      ? 'intent'
+      : (pending?.kind ?? 'loading')
 
   return (
     <div data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
@@ -132,6 +138,7 @@ export function MuseOverlay() {
           <MusePanel
             element={selected}
             mock={MOCK}
+            stepKey={stepKey}
             onClose={() => {
               clearSelected()
               setSelected(null)

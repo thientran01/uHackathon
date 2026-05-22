@@ -11,7 +11,9 @@ export function SelectBanner() {
 export function HoverHighlight({ rect }: { rect: Rect }) {
   return (
     <div
-      className="pointer-events-none absolute rounded-md bg-violet-500/10 ring-2 ring-violet-500 transition-all duration-75"
+      // On-screen movement between elements -> ease-in-out, fast. Instant for
+      // reduced-motion (it tracks the cursor, so no continuity is lost).
+      className="pointer-events-none absolute rounded-md bg-violet-500/10 ring-2 ring-violet-500 transition-all duration-100 ease-in-out motion-reduce:transition-none"
       style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
     />
   )

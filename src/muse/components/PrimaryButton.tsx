@@ -26,7 +26,7 @@ export function PrimaryButton({
       data-testid={testId}
       onClick={onClick}
       disabled={disabled}
-      className={`w-full rounded-xl ${color} py-2.5 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100`}
+      className={`w-full rounded-xl ${color} py-2.5 text-sm font-semibold text-white shadow-sm transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100 motion-reduce:active:scale-100`}
     >
       {loading && busy ? busy : idle}
     </button>

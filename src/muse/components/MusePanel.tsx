@@ -4,17 +4,21 @@ import type { SelectedElement } from '../types'
 export function MusePanel({
   element,
   mock = false,
+  stepKey,
   onClose,
   children,
 }: {
   element: SelectedElement
   mock?: boolean
+  /** Changes per flow step so the body re-mounts and plays the step animation. */
+  stepKey?: string
   onClose: () => void
   children: ReactNode
 }) {
   const file = element.fileName ? element.fileName.split(/[\\/]/).pop() : null
   return (
-    <div className="pointer-events-auto flex max-h-[80vh] w-[380px] flex-col overflow-hidden rounded-2xl bg-white/95 shadow-2xl ring-1 ring-black/5 backdrop-blur">
+    // Entrance: grows out of the bottom-right (where the FAB sits). ease-out, 220ms.
+    <div className="pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right animate-muse-panel flex-col overflow-hidden rounded-2xl bg-white/95 shadow-2xl ring-1 ring-black/5 backdrop-blur motion-reduce:animate-none">
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-slate-900">
           <span className="text-violet-600">✦</span> Muse
@@ -46,7 +50,12 @@ export function MusePanel({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3.5">{children}</div>
+      <div className="flex-1 overflow-y-auto px-4 py-3.5">
+        {/* Keyed so each step swap replays the subtle blur-rise transition. */}
+        <div key={stepKey} className="animate-muse-step motion-reduce:animate-none">
+          {children}
+        </div>
+      </div>
     </div>
   )
 }
