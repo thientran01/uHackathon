@@ -131,6 +131,7 @@ export function MuseOverlay() {
       {/* Floating action button */}
       {!selected && (
         <button
+          data-testid="muse-fab"
           onClick={() => setActive((v) => !v)}
           className={`pointer-events-auto absolute bottom-6 right-6 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl transition ${
             active ? 'bg-slate-900 text-white' : 'bg-violet-600 text-white hover:bg-violet-500'
@@ -190,6 +191,7 @@ export function MuseOverlay() {
                   What would you like to change about this?
                 </p>
                 <textarea
+                  data-testid="muse-intent"
                   value={intent}
                   onChange={(e) => setIntent(e.target.value)}
                   onKeyDown={(e) => {
@@ -200,6 +202,7 @@ export function MuseOverlay() {
                   className="w-full resize-none rounded-lg border border-slate-200 p-2 text-sm outline-none focus:border-violet-400"
                 />
                 <button
+                  data-testid="muse-ask"
                   onClick={start}
                   disabled={loading || !intent.trim()}
                   className="w-full rounded-lg bg-violet-600 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-40"
@@ -221,6 +224,7 @@ export function MuseOverlay() {
                         return (
                           <button
                             key={opt.label}
+                            data-testid="muse-option"
                             onClick={() => setAnswers((a) => ({ ...a, [qi]: opt.label }))}
                             className={`w-full rounded-lg border p-2.5 text-left transition ${
                               chosen
@@ -237,6 +241,7 @@ export function MuseOverlay() {
                   </div>
                 ))}
                 <button
+                  data-testid="muse-continue"
                   onClick={submitAnswers}
                   disabled={loading || !allAnswered}
                   className="w-full rounded-lg bg-violet-600 py-2 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-40"
@@ -277,6 +282,7 @@ export function MuseOverlay() {
                   </div>
                 ) : (
                   <button
+                    data-testid="muse-approve"
                     onClick={approve}
                     disabled={loading}
                     className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
