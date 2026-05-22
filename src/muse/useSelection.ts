@@ -8,26 +8,35 @@ function isMuseUI(el: Element | null): boolean {
   return !!el && !!el.closest('[data-muse-ui]')
 }
 
-function describe(el: Element): Omit<SelectedElement, 'fileName' | 'line'> {
+function toSelected(el: Element): SelectedElement {
+  const loc = getSourceLocation(el)
+  const tag = el.tagName.toLowerCase()
+  const fileName = loc?.fileName ?? ''
+  const line = loc?.lineNumber ?? 0
   return {
-    tag: el.tagName.toLowerCase(),
+    fileName,
+    line,
+    tag,
     classNames: el.getAttribute('class') ?? '',
     text: (el.textContent ?? '').trim().slice(0, 80),
+    key: `${fileName}:${line}:${loc?.columnNumber ?? 0}:${tag}`,
+    node: el,
   }
 }
 
 /**
- * Drives "select mode": hover highlights elements, a click captures one and
- * resolves it back to its source file/line. Ignores the Muse UI itself.
+ * Drives "select mode": hover highlights elements; a plain click selects one
+ * (fast path), shift-click adds/removes elements to build a batch. Resolves
+ * each element back to its source file/line. Ignores the Muse UI itself.
  */
 export function useSelection() {
   const [active, setActive] = useState(false)
   const [hoverRect, setHoverRect] = useState<Rect | null>(null)
   const [hoverInfo, setHoverInfo] = useState<ElementInfo | null>(null)
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
-  const [selected, setSelected] = useState<SelectedElement | null>(null)
+  const [selection, setSelection] = useState<SelectedElement[]>([])
 
-  const clearSelected = useCallback(() => setSelected(null), [])
+  const clearSelection = useCallback(() => setSelection([]), [])
 
   useEffect(() => {
     if (!active) {
@@ -53,22 +62,32 @@ export function useSelection() {
     const onClick = (e: MouseEvent) => {
       const el = e.target as Element | null
       if (!el || isMuseUI(el)) return
-      // Hijack this click for selection.
       e.preventDefault()
       e.stopPropagation()
+      const picked = toSelected(el)
 
-      const loc = getSourceLocation(el)
-      setSelected({
-        fileName: loc?.fileName ?? '',
-        line: loc?.lineNumber ?? 0,
-        ...describe(el),
-      })
+      if (e.shiftKey) {
+        // Build a batch — only add elements we can actually edit. Stay in select mode.
+        if (!picked.fileName) return
+        setSelection((prev) =>
+          prev.some((p) => p.key === picked.key)
+            ? prev.filter((p) => p.key !== picked.key) // toggle off
+            : [...prev, picked],
+        )
+        return
+      }
+
+      // Plain click — single fast path. Commit immediately.
+      setSelection([picked])
       setActive(false)
       setHoverRect(null)
     }
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setActive(false)
+      if (e.key === 'Escape') {
+        setActive(false)
+        setSelection([]) // cancel the in-progress batch
+      }
     }
 
     document.body.classList.add('muse-selecting')
@@ -83,5 +102,14 @@ export function useSelection() {
     }
   }, [active])
 
-  return { active, setActive, hoverRect, hoverInfo, cursor, selected, setSelected, clearSelected }
+  return {
+    active,
+    setActive,
+    hoverRect,
+    hoverInfo,
+    cursor,
+    selection,
+    setSelection,
+    clearSelection,
+  }
 }

@@ -1,24 +1,27 @@
 import type { ReactNode } from 'react'
 import type { SelectedElement } from '../types'
 
+const fileOf = (e: SelectedElement) => (e.fileName ? e.fileName.split(/[\\/]/).pop() : null)
+
 export function MusePanel({
-  element,
+  elements,
   mock = false,
   stepKey,
   closing = false,
   onClose,
+  onRemove,
   children,
 }: {
-  element: SelectedElement
+  elements: SelectedElement[]
   mock?: boolean
-  /** Changes per flow step so the body re-mounts and plays the step animation. */
   stepKey?: string
-  /** When true, plays the exit animation instead of the entrance. */
   closing?: boolean
   onClose: () => void
+  onRemove?: (key: string) => void
   children: ReactNode
 }) {
-  const file = element.fileName ? element.fileName.split(/[\\/]/).pop() : null
+  const single = elements.length === 1 ? elements[0] : null
+
   return (
     // Near-black tool surface. Grows out of the bottom-right (the FAB); reverses on close.
     <div
@@ -30,7 +33,7 @@ export function MusePanel({
         <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-zinc-100">
           <span className="text-accent">✦</span> Muse
           {mock && (
-            <span className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+            <span className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
               mock
             </span>
           )}
@@ -44,16 +47,45 @@ export function MusePanel({
         </button>
       </header>
 
-      <div className="flex items-center gap-2 border-y border-white/[0.07] bg-white/[0.02] px-4 py-2 text-xs text-zinc-500">
-        <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-zinc-300 ring-1 ring-white/10">
-          &lt;{element.tag}&gt;
-        </span>
-        {file ? (
-          <span className="truncate font-mono">
-            {file}:{element.line}
-          </span>
+      {/* Target(s) */}
+      <div className="border-y border-white/[0.07] bg-white/[0.02] px-4 py-2 text-xs text-zinc-500">
+        {single ? (
+          <div className="flex items-center gap-2">
+            <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-zinc-300 ring-1 ring-white/10">
+              &lt;{single.tag}&gt;
+            </span>
+            {fileOf(single) ? (
+              <span className="truncate font-mono">
+                {fileOf(single)}:{single.line}
+              </span>
+            ) : (
+              <span className="text-amber-300/80">source not found</span>
+            )}
+          </div>
         ) : (
-          <span className="text-amber-300/80">source not found</span>
+          <div className="space-y-1.5">
+            <div className="font-medium text-zinc-400">Editing {elements.length} elements</div>
+            <div className="flex flex-wrap gap-1.5">
+              {elements.map((el) => (
+                <span
+                  key={el.key}
+                  title={`${fileOf(el)}:${el.line}`}
+                  className="inline-flex items-center gap-1 rounded bg-white/5 px-1.5 py-0.5 font-mono text-zinc-300 ring-1 ring-white/10"
+                >
+                  &lt;{el.tag}&gt;
+                  {onRemove && (
+                    <button
+                      onClick={() => onRemove(el.key)}
+                      aria-label={`Remove ${el.tag}`}
+                      className="text-zinc-500 transition hover:text-zinc-200"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

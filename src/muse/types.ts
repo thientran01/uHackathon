@@ -6,13 +6,17 @@ export type SelectedElement = {
   tag: string
   classNames: string
   text: string
+  key: string // stable id for dedupe / badges (fileName:line:col:tag)
+  node?: Element // client-only: live DOM node for drawing outlines/badges (never sent to backend)
 }
 
 // --- Tool I/O (mirrors the schemas in server/musePlugin.ts) ---
 export type QuestionOption = { label: string; description: string }
 export type ClarifyingQuestion = { question: string; options: QuestionOption[] }
 export type AskInput = { questions: ClarifyingQuestion[] }
-export type ProposeInput = { newContent: string; rationale: string }
+
+export type FileEdit = { fileName: string; newContent: string }
+export type ProposeInput = { edits: FileEdit[]; rationale: string }
 
 // --- Anthropic content blocks (the subset we care about) ---
 export type TextBlock = { type: 'text'; text: string }
@@ -27,7 +31,7 @@ export type ContentBlock = TextBlock | ToolUseBlock | { type: string; [k: string
 export type ChatResponse = {
   content?: ContentBlock[]
   stop_reason?: string
-  originalContent?: string
+  originals?: Record<string, string> // fileName -> original contents, for diffing
   error?: string
 }
 

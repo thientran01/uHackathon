@@ -1,11 +1,11 @@
 import { MOCK } from './config'
-import { fxNewContent, fxOriginal, fxQuestions, fxRationale } from './fixtures'
-import type { ChatMessage, ChatResponse, SelectedElement } from './types'
+import { fxEdits, fxOriginals, fxQuestions, fxRationale } from './fixtures'
+import type { ChatMessage, ChatResponse, FileEdit, SelectedElement } from './types'
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export async function museChat(
-  element: SelectedElement,
+  targets: SelectedElement[],
   messages: ChatMessage[],
 ): Promise<ChatResponse> {
   if (MOCK) return mockChat(messages)
@@ -14,20 +14,20 @@ export async function museChat(
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      fileName: element.fileName,
-      element: {
-        tag: element.tag,
-        classNames: element.classNames,
-        text: element.text,
-        line: element.line,
-      },
+      targets: targets.map((t) => ({
+        fileName: t.fileName,
+        tag: t.tag,
+        classNames: t.classNames,
+        text: t.text,
+        line: t.line,
+      })),
       messages,
     }),
   })
   return (await res.json()) as ChatResponse
 }
 
-export async function museWrite(fileName: string, newContent: string): Promise<void> {
+export async function museWrite(files: FileEdit[]): Promise<void> {
   if (MOCK) {
     await delay(300) // pretend to write; no real disk change in mock mode
     return
@@ -36,16 +36,15 @@ export async function museWrite(fileName: string, newContent: string): Promise<v
   const res = await fetch('/api/muse/write', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ fileName, newContent }),
+    body: JSON.stringify({ files }),
   })
   const data = (await res.json()) as { ok?: boolean; error?: string }
   if (!data.ok) throw new Error(data.error ?? 'Write failed')
 }
 
 // --- Mock mode -------------------------------------------------------------
-// First turn -> a clarifying question. After the user answers (a tool_result
-// appears in the conversation) -> a proposed edit. Lets the whole UI be
-// exercised with zero API cost.
+// First turn -> a clarifying question. After the user answers -> a multi-file
+// proposed edit. Lets the whole batch UI be exercised with zero API cost.
 async function mockChat(messages: ChatMessage[]): Promise<ChatResponse> {
   await delay(600)
   const answered = messages.some(
@@ -58,13 +57,13 @@ async function mockChat(messages: ChatMessage[]): Promise<ChatResponse> {
       content: [
         { type: 'tool_use', id: 'mock-ask', name: 'ask_clarifying_questions', input: { questions: fxQuestions } },
       ],
-      originalContent: fxOriginal,
+      originals: fxOriginals,
     }
   }
   return {
     content: [
-      { type: 'tool_use', id: 'mock-edit', name: 'propose_edit', input: { newContent: fxNewContent, rationale: fxRationale } },
+      { type: 'tool_use', id: 'mock-edit', name: 'propose_edit', input: { edits: fxEdits, rationale: fxRationale } },
     ],
-    originalContent: fxOriginal,
+    originals: fxOriginals,
   }
 }
