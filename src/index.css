@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Select mode: crosshair cursor everywhere so it's clear you're picking a target. */
+body.muse-selecting,
+body.muse-selecting * {
+  cursor: crosshair !important;
+}

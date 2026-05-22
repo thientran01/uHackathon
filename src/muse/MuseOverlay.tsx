@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { museChat, museWrite } from './api'
 import { MOCK } from './config'
 import { useSelection } from './useSelection'
@@ -22,6 +22,8 @@ type Pending =
   | { kind: 'ask'; toolUseId: string; questions: ClarifyingQuestion[] }
   | { kind: 'propose'; toolUseId: string; newContent: string; rationale: string }
 
+const EXIT_MS = 170 // keep in sync with the muse-panel-out animation
+
 export function MuseOverlay() {
   const { active, setActive, hoverRect, selected, setSelected, clearSelected } = useSelection()
 
@@ -33,6 +35,8 @@ export function MuseOverlay() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [applied, setApplied] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const closeTimer = useRef<number | null>(null)
 
   // Reset the conversation whenever a new element is selected.
   useEffect(() => {
@@ -44,12 +48,32 @@ export function MuseOverlay() {
     setApplied(false)
   }, [selected])
 
+  // Play the exit animation, then actually unmount the panel.
+  function requestClose() {
+    if (closing) return
+    setClosing(true)
+    closeTimer.current = window.setTimeout(() => {
+      clearSelected()
+      setSelected(null)
+      setClosing(false)
+    }, EXIT_MS)
+  }
+
+  // Return to the intent step on the same element — a continuous partner loop.
+  function refineAgain() {
+    setMessages([])
+    setPending(null)
+    setAnswers({})
+    setError(null)
+    setApplied(false)
+    setIntent('')
+  }
+
   async function runChat(msgs: ChatMessage[]) {
     if (!selected) return
     setLoading(true)
     setError(null)
-    // Keep the current step (e.g. the questions) on screen while we wait, so the
-    // panel never flashes empty — the action button just shows its busy label.
+    // Keep the current step on screen while we wait, so the panel never flashes empty.
     try {
       const resp = await museChat(selected, msgs)
       if (resp.error) {
@@ -117,6 +141,47 @@ export function MuseOverlay() {
       ? 'intent'
       : (pending?.kind ?? 'loading')
 
+  // Keyboard (Esc to dismiss, Enter to confirm the current step) + click-outside.
+  useEffect(() => {
+    if (!selected || closing) return
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        requestClose()
+        return
+      }
+      if (e.key === 'Enter') {
+        const t = e.target as HTMLElement | null
+        if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT')) return // let the textarea handle it
+        if (pending?.kind === 'ask' && allAnswered && !loading) {
+          e.preventDefault()
+          submitAnswers()
+        } else if (pending?.kind === 'propose' && !applied && !loading) {
+          e.preventDefault()
+          approve()
+        }
+      }
+    }
+    document.addEventListener('keydown', onKey, true)
+
+    // Click-outside dismiss — but not while picking a new target (select mode).
+    let onDocClick: ((e: MouseEvent) => void) | null = null
+    if (!active) {
+      onDocClick = (e: MouseEvent) => {
+        const t = e.target as Element | null
+        if (t && !t.closest('[data-muse-ui]')) requestClose()
+      }
+      document.addEventListener('click', onDocClick, true)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', onKey, true)
+      if (onDocClick) document.removeEventListener('click', onDocClick, true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, closing, active, pending, allAnswered, applied, loading])
+
   return (
     <div data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
       {active && hoverRect && <HoverHighlight rect={hoverRect} />}
@@ -139,10 +204,8 @@ export function MuseOverlay() {
             element={selected}
             mock={MOCK}
             stepKey={stepKey}
-            onClose={() => {
-              clearSelected()
-              setSelected(null)
-            }}
+            closing={closing}
+            onClose={requestClose}
           >
             {unmappable ? (
               <UnmappableNote />
@@ -165,6 +228,7 @@ export function MuseOverlay() {
                 applied={applied}
                 loading={loading}
                 onApprove={approve}
+                onRefine={refineAgain}
               />
             ) : null}
 

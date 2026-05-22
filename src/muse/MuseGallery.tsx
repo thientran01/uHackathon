@@ -104,6 +104,7 @@ export function MuseGallery() {
               applied={false}
               loading={false}
               onApprove={noop}
+              onRefine={noop}
             />
           </MusePanel>
         </Cell>
@@ -116,6 +117,7 @@ export function MuseGallery() {
               applied
               loading={false}
               onApprove={noop}
+              onRefine={noop}
             />
           </MusePanel>
         </Cell>

@@ -64,10 +64,12 @@ export function useSelection() {
       if (e.key === 'Escape') setActive(false)
     }
 
+    document.body.classList.add('muse-selecting')
     document.addEventListener('mousemove', onMove, true)
     document.addEventListener('click', onClick, true)
     document.addEventListener('keydown', onKey, true)
     return () => {
+      document.body.classList.remove('muse-selecting')
       document.removeEventListener('mousemove', onMove, true)
       document.removeEventListener('click', onClick, true)
       document.removeEventListener('keydown', onKey, true)

@@ -41,12 +41,18 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(6px) scale(0.97)' },
           '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
+        // Panel exit — mirrors the entrance, ~20% faster (Emil: exits can be quicker).
+        'muse-panel-out': {
+          '0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+          '100%': { opacity: '0', transform: 'translateY(6px) scale(0.97)' },
+        },
       },
       animation: {
         // cubic-bezier ~ easeOutExpo (easings.co) — strong ease-out, feels snappy.
         'muse-panel': 'muse-panel-in 220ms cubic-bezier(0.16, 1, 0.3, 1)',
         'muse-step': 'muse-step-in 160ms cubic-bezier(0.16, 1, 0.3, 1)',
         'muse-rise': 'muse-rise-in 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'muse-panel-out': 'muse-panel-out 170ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
     },
   },
