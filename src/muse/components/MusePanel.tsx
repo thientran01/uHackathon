@@ -3,11 +3,12 @@ import {
   ArrowCounterClockwise,
   ArrowUUpLeft,
   ArrowUUpRight,
-  Sparkle,
   X,
 } from '@phosphor-icons/react'
 import type { SelectedElement } from '../types'
 import type { HistoryControls } from '../MuseOverlay'
+import { UfoIcon } from './UfoIcon'
+import { ThinkingText } from './ThinkingText'
 
 const fileOf = (e: SelectedElement) => (e.fileName ? e.fileName.split(/[\\/]/).pop() : null)
 
@@ -16,6 +17,7 @@ export function MusePanel({
   mock = false,
   stepKey,
   closing = false,
+  loading = false,
   historyControls,
   onClose,
   onRemove,
@@ -25,6 +27,7 @@ export function MusePanel({
   mock?: boolean
   stepKey?: string
   closing?: boolean
+  loading?: boolean
   historyControls?: HistoryControls
   onClose: () => void
   onRemove?: (key: string) => void
@@ -41,7 +44,8 @@ export function MusePanel({
     >
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-zinc-100">
-          <Sparkle size={15} weight="fill" className="text-accent" /> Muse
+          <UfoIcon size={16} loading={loading} className="text-accent" />
+          {loading ? <ThinkingText /> : 'Muse'}
           {mock && (
             <span className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
               mock

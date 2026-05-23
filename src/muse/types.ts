@@ -39,6 +39,9 @@ export type ChatResponse = {
 // restores the whole multi-file change as a unit.
 export type HistoryEntry = {
   files: Array<{ fileName: string; before: string; after: string }>
+  // Elements selected when the edit was applied — restored on undo/redo so the
+  // panel reopens ready for follow-up edits.
+  elements: SelectedElement[]
   label: string
 }
 

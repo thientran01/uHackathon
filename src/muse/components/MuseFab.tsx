@@ -1,6 +1,6 @@
-import { Sparkle } from '@phosphor-icons/react'
+import { UfoIcon } from './UfoIcon'
 
-export function MuseFab({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+export function MuseFab({ active, loading, onToggle }: { active: boolean; loading: boolean; onToggle: () => void }) {
   return (
     <button
       data-testid="muse-fab"
@@ -9,7 +9,7 @@ export function MuseFab({ active, onToggle }: { active: boolean; onToggle: () =>
         active ? 'ring-accent/60 hover:bg-ink' : 'ring-white/10 hover:bg-[#1f1f24]'
       }`}
     >
-      <Sparkle size={17} weight="fill" className={active ? 'text-zinc-400' : 'text-accent'} />
+      <UfoIcon size={18} loading={loading} className={active ? 'text-zinc-400' : 'text-accent'} />
       {active ? 'Cancel' : 'Design with Muse'}
     </button>
   )

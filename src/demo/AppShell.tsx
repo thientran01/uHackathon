@@ -54,7 +54,7 @@ export default function AppShell({ me, route, onRoute, onSignOut, children }: {
           <div className="text-xs text-[color:var(--c-on-bg-muted)] mt-0.5">May 26 · 6:30 PM</div>
           <div className="text-xs text-[color:var(--c-on-bg-muted)]">Highland Park</div>
           <button onClick={() => onRoute('sched')}
-            className="mt-3 w-full py-2 rounded-lg text-xs font-semibold hover:opacity-90 bg-[color:var(--c-ink)] text-[color:var(--c-card)]">
+            className="mt-3 w-full py-2 rounded-lg text-sm font-semibold hover:opacity-90 bg-[color:var(--c-ink)] text-[color:var(--c-card)]">
             I'm in →
           </button>
         </div>

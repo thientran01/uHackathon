@@ -178,12 +178,14 @@ export function MuseOverlay() {
     try {
       await museWrite(pending.edits)
       // Record the whole batch as one history entry (before/after per file).
+      // Strip live DOM node refs — they'll be stale after HMR reloads the component.
       const entry: HistoryEntry = {
         files: pending.edits.map((e) => ({
           fileName: e.fileName,
           before: originals[e.fileName] ?? '',
           after: e.newContent,
         })),
+        elements: selection,
         label: pending.rationale.slice(0, 80),
       }
       setPast((p) => [...p, entry])
@@ -206,6 +208,7 @@ export function MuseOverlay() {
       setPast((p) => p.slice(0, -1))
       setFuture((f) => [entry, ...f])
       setApplied(false)
+      setSelection(entry.elements)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -223,6 +226,7 @@ export function MuseOverlay() {
       setFuture((f) => f.slice(1))
       setPast((p) => [...p, entry])
       setApplied(true)
+      setSelection(entry.elements)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -269,7 +273,7 @@ export function MuseOverlay() {
     pending?.kind === 'ask' &&
     pending.questions.every((_, i) => (answers[i] ?? '').trim() !== '')
   const panelOpen = selection.length >= 1 && !active
-  const showMarkers = selection.length >= 1 && (active || selection.length > 1)
+  const showMarkers = selection.length >= 1
   const stepKey = unmappable
     ? 'unmappable'
     : messages.length === 0
@@ -345,7 +349,7 @@ export function MuseOverlay() {
               onRevert={historyControls.onRevert}
             />
           )}
-          <MuseFab active={active} onToggle={() => setActive((v) => !v)} />
+          <MuseFab active={active} loading={loading} onToggle={() => setActive((v) => !v)} />
         </div>
       )}
 
@@ -362,6 +366,7 @@ export function MuseOverlay() {
             mock={MOCK}
             stepKey={stepKey}
             closing={closing}
+            loading={loading || historyLoading}
             historyControls={hasHistory ? historyControls : undefined}
             onClose={requestClose}
             onRemove={removeChip}

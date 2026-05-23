@@ -22,7 +22,7 @@ export default function HomePage({ me, t, onRoute, onLogMatch }: {
       <section className="mt-6">
         <div className="flex items-baseline justify-between mb-3">
           <h2 className="font-[var(--font-display)] text-lg font-bold text-[color:var(--c-on-bg)] flex items-center gap-2">
-            <IconFire size={18} className="text-[color:var(--c-pop)]" /> On fire
+            <IconFire size={18} className="text-[color:var(--c-pop)]" /> Players on fire
           </h2>
           <div className="text-[11px] uppercase tracking-wider text-[color:var(--c-on-bg)]/40">3+ wins in a row</div>
         </div>
@@ -48,7 +48,7 @@ export default function HomePage({ me, t, onRoute, onLogMatch }: {
 
         <section>
           <div className="flex items-baseline justify-between mb-3">
-            <h2 className="font-[var(--font-display)] text-lg font-bold text-[color:var(--c-on-bg)] flex items-center gap-2">
+            <h2 className="font-[var(--font-display)] text-base font-bold text-[color:var(--c-on-bg)] flex items-center gap-2">
               <IconTrophy size={18} /> Leaderboard
             </h2>
             <button onClick={() => onRoute('leader')} className="text-xs font-semibold text-[color:var(--c-on-bg)]/60 hover:text-[color:var(--c-on-bg)]">
@@ -63,7 +63,12 @@ export default function HomePage({ me, t, onRoute, onLogMatch }: {
       </div>
 
       <section className="mt-8">
-        <h2 className="font-[var(--font-display)] text-lg font-bold text-[color:var(--c-on-bg)] mb-3">Activity</h2>
+        <h2 className="font-[var(--font-display)] text-lg font-bold text-[color:var(--c-on-bg)] mb-3 flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[color:var(--c-pop)]">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          Activity
+        </h2>
         <div className="rounded-2xl border border-[color:var(--c-rail-line)] divide-y divide-[color:var(--c-rail-line)]">
           {FEED.map(f => <FeedRow key={f.id} f={f} />)}
         </div>
@@ -114,7 +119,7 @@ function StreakChip({ p }: { p: Player }) {
         <span className="font-[var(--font-display)] font-bold text-white text-sm">{p.name[0]}</span>
       </div>
       <div className="leading-tight min-w-0 flex-1">
-        <div className="text-sm font-semibold text-[color:var(--c-on-bg)] truncate">{p.name}</div>
+        <div className="text-base font-semibold text-[color:var(--c-on-bg)] truncate">{p.name}</div>
         <div className="text-[11px] text-[color:var(--c-on-bg)]/50 font-mono">+{p.streak} wins</div>
       </div>
       <IconFire size={16} className="text-[color:var(--c-pop)]" />
@@ -155,21 +160,23 @@ export function MatchRow({ m, variant = 'standard' }: { m: Match; variant?: stri
 
   return (
     <div className="bg-[color:var(--c-card)] text-[color:var(--c-ink)] rounded-[var(--r-card)] p-4 flex items-center gap-4">
-      <div className="flex items-center gap-2 w-[180px] shrink-0">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
         <PlayerAvi p={aPlayers[0]} />
         {aPlayers[1] && <PlayerAvi p={aPlayers[1]} offset />}
         <div className="leading-tight ml-1 min-w-0">
-          <div className="text-sm font-semibold truncate">{aPlayers.map(p => p.name.split(' ')[0]).join(' & ')}</div>
-          <div className="text-[11px] text-[color:var(--c-muted)]">{aWon && <span className="text-[color:var(--c-pop)] font-semibold">WON</span>}</div>
+          <div className={`text-base font-semibold truncate ${aWon ? 'text-emerald-500' : 'text-rose-400'}`}>
+            {aPlayers.map(p => p.name.split(' ')[0]).join(' & ')}
+          </div>
         </div>
       </div>
-      <div className="flex-1 flex items-center justify-center gap-3">
+      <div className="shrink-0 flex items-center justify-center px-2">
         <span className="font-mono font-bold text-base">{m.score}</span>
       </div>
-      <div className="flex items-center gap-2 w-[180px] shrink-0 justify-end">
+      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
         <div className="leading-tight mr-1 text-right min-w-0">
-          <div className="text-sm font-semibold truncate">{bPlayers.map(p => p.name.split(' ')[0]).join(' & ')}</div>
-          <div className="text-[11px] text-[color:var(--c-muted)]">{!aWon && <span className="text-[color:var(--c-pop)] font-semibold">WON</span>}</div>
+          <div className={`text-base font-semibold truncate ${!aWon ? 'text-emerald-500' : 'text-rose-400'}`}>
+            {bPlayers.map(p => p.name.split(' ')[0]).join(' & ')}
+          </div>
         </div>
         <PlayerAvi p={bPlayers[0]} />
         {bPlayers[1] && <PlayerAvi p={bPlayers[1]} offset />}

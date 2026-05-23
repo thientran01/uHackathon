@@ -65,11 +65,17 @@ export function SelectionMarkers({ elements }: { elements: SelectedElement[] }) 
     const on = () => force()
     window.addEventListener('scroll', on, true)
     window.addEventListener('resize', on)
+
+    // Re-measure whenever a selected element changes size (e.g. after HMR applies an edit).
+    const ro = new ResizeObserver(() => force())
+    elements.forEach((el) => { if (el.node?.isConnected) ro.observe(el.node) })
+
     return () => {
       window.removeEventListener('scroll', on, true)
       window.removeEventListener('resize', on)
+      ro.disconnect()
     }
-  }, [])
+  }, [elements])
 
   return (
     <>
