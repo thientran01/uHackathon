@@ -1,6 +1,6 @@
 import { UfoIcon } from './UfoIcon'
 
-export function MuseFab({ active, loading, onToggle }: { active: boolean; loading: boolean; onToggle: () => void }) {
+export function MuseFab({ active, loading = false, onToggle }: { active: boolean; loading?: boolean; onToggle: () => void }) {
   return (
     <button
       data-testid="muse-fab"
