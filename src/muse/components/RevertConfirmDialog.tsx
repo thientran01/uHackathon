@@ -1,3 +1,5 @@
+import { Warning } from '@phosphor-icons/react'
+
 export function RevertConfirmDialog({
   onConfirm,
   onCancel,
@@ -15,7 +17,7 @@ export function RevertConfirmDialog({
       />
       <div className="relative w-80 animate-muse-panel rounded-2xl bg-zinc-900 p-5 shadow-2xl ring-1 ring-white/10 motion-reduce:animate-none">
         <div className="mb-1.5 flex items-center gap-2">
-          <span className="text-rose-400 text-base leading-none">⚠</span>
+          <Warning size={16} weight="fill" className="text-rose-400" />
           <h3 className="text-sm font-semibold text-zinc-100">Revert to original?</h3>
         </div>
         <p className="mb-4 text-xs leading-relaxed text-zinc-400">

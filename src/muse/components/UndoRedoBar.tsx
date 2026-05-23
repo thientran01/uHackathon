@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react'
+import { ArrowCounterClockwise, ArrowUUpLeft, ArrowUUpRight } from '@phosphor-icons/react'
+
 type Props = {
   canUndo: boolean
   canRedo: boolean
@@ -10,10 +13,16 @@ type Props = {
 export function UndoRedoBar({ canUndo, canRedo, loading, onUndo, onRedo, onRevert }: Props) {
   return (
     <div className="pointer-events-auto flex items-center gap-0.5 rounded-2xl bg-ink/95 px-1.5 py-1.5 shadow-xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl">
-      <HistoryBtn onClick={onUndo} disabled={!canUndo || loading} label="Undo" icon="↩" />
-      <HistoryBtn onClick={onRedo} disabled={!canRedo || loading} label="Redo" icon="↪" />
+      <HistoryBtn onClick={onUndo} disabled={!canUndo || loading} label="Undo" icon={<ArrowUUpLeft size={15} />} />
+      <HistoryBtn onClick={onRedo} disabled={!canRedo || loading} label="Redo" icon={<ArrowUUpRight size={15} />} />
       <div className="mx-1.5 h-3.5 w-px bg-white/10" />
-      <HistoryBtn onClick={onRevert} disabled={!canUndo || loading} label="Revert to original" icon="⟲" iconSize="text-[20px] relative -top-0.5" danger />
+      <HistoryBtn
+        onClick={onRevert}
+        disabled={!canUndo || loading}
+        label="Revert to original"
+        icon={<ArrowCounterClockwise size={15} />}
+        danger
+      />
     </div>
   )
 }
@@ -23,14 +32,12 @@ function HistoryBtn({
   disabled,
   label,
   icon,
-  iconSize = 'text-[13px]',
   danger = false,
 }: {
   onClick: () => void
   disabled: boolean
   label: string
-  icon: string
-  iconSize?: string
+  icon: ReactNode
   danger?: boolean
 }) {
   return (
@@ -45,9 +52,7 @@ function HistoryBtn({
           : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
       }`}
     >
-      <span aria-hidden className={`${iconSize} leading-none`}>
-        {icon}
-      </span>
+      {icon}
       {label}
     </button>
   )

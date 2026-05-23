@@ -1,4 +1,12 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import {
+  ArrowCounterClockwise,
+  ArrowUUpLeft,
+  ArrowUUpRight,
+  CaretLeft,
+  CaretRight,
+  Check,
+} from '@phosphor-icons/react'
 import type { HistoryControls } from '../MuseOverlay'
 import type { FileEdit } from '../types'
 import { DiffView } from './DiffView'
@@ -48,7 +56,7 @@ export function ProposedEdit({
                   className="rounded p-1 transition hover:bg-white/5 hover:text-zinc-200 disabled:opacity-30"
                   aria-label="Previous file"
                 >
-                  ◄
+                  <CaretLeft size={14} />
                 </button>
                 <span className="tabular-nums">
                   {safe + 1} of {edits.length} files
@@ -60,7 +68,7 @@ export function ProposedEdit({
                   className="rounded p-1 transition hover:bg-white/5 hover:text-zinc-200 disabled:opacity-30"
                   aria-label="Next file"
                 >
-                  ►
+                  <CaretRight size={14} />
                 </button>
               </div>
             )}
@@ -72,7 +80,7 @@ export function ProposedEdit({
       {applied ? (
         <div className="space-y-2.5">
           <div className="flex animate-muse-rise items-start gap-2 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-sm font-medium text-emerald-300 ring-1 ring-emerald-500/20 motion-reduce:animate-none">
-            <span className="leading-5">✓</span>
+            <Check size={16} weight="bold" className="mt-0.5 shrink-0" />
             <span>
               Applied to {edits.length} file{edits.length === 1 ? '' : 's'} — your app updated, and the
               code change is real.
@@ -90,21 +98,20 @@ export function ProposedEdit({
               <GhostBtn
                 onClick={historyControls.onUndo}
                 disabled={!historyControls.canUndo || historyControls.loading}
-                icon="↩"
+                icon={<ArrowUUpLeft size={14} />}
                 label="Undo"
               />
               <GhostBtn
                 onClick={historyControls.onRedo}
                 disabled={!historyControls.canRedo || historyControls.loading}
-                icon="↪"
+                icon={<ArrowUUpRight size={14} />}
                 label="Redo"
               />
               <div className="h-3.5 w-px bg-white/10" />
               <GhostBtn
                 onClick={historyControls.onRevert}
                 disabled={!historyControls.canUndo || historyControls.loading}
-                icon="⟲"
-                iconSize="text-[20px] relative -top-0.5"
+                icon={<ArrowCounterClockwise size={14} />}
                 label="Revert to original"
                 danger
               />
@@ -128,14 +135,12 @@ function GhostBtn({
   onClick,
   disabled,
   icon,
-  iconSize = 'text-[13px]',
   label,
   danger = false,
 }: {
   onClick: () => void
   disabled: boolean
-  icon: string
-  iconSize?: string
+  icon: ReactNode
   label: string
   danger?: boolean
 }) {
@@ -151,9 +156,7 @@ function GhostBtn({
           : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
       }`}
     >
-      <span aria-hidden className={`${iconSize} leading-none`}>
-        {icon}
-      </span>
+      {icon}
       {label}
     </button>
   )

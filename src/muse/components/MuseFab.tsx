@@ -1,3 +1,5 @@
+import { Sparkle } from '@phosphor-icons/react'
+
 export function MuseFab({ active, onToggle }: { active: boolean; onToggle: () => void }) {
   return (
     <button
@@ -7,7 +9,7 @@ export function MuseFab({ active, onToggle }: { active: boolean; onToggle: () =>
         active ? 'ring-accent/60 hover:bg-ink' : 'ring-white/10 hover:bg-[#1f1f24]'
       }`}
     >
-      <span className={`text-base leading-none ${active ? 'text-zinc-400' : 'text-accent'}`}>✦</span>
+      <Sparkle size={17} weight="fill" className={active ? 'text-zinc-400' : 'text-accent'} />
       {active ? 'Cancel' : 'Design with Muse'}
     </button>
   )

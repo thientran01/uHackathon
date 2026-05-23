@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from 'react'
+import { ArrowRight } from '@phosphor-icons/react'
 import type { ElementInfo } from '../sourceLocation'
 import type { SelectedElement } from '../types'
 import type { Rect } from '../useSelection'
@@ -104,9 +105,9 @@ export function SelectionTray({ count, onDesign }: { count: number; onDesign: ()
       <button
         data-testid="muse-design-batch"
         onClick={onDesign}
-        className="rounded-full bg-accent px-4 py-1.5 font-semibold text-white transition hover:bg-accent-hover active:scale-[0.97] motion-reduce:active:scale-100"
+        className="inline-flex items-center gap-1 rounded-full bg-accent px-4 py-1.5 font-semibold text-white transition hover:bg-accent-hover active:scale-[0.97] motion-reduce:active:scale-100"
       >
-        Design →
+        Design <ArrowRight size={14} weight="bold" />
       </button>
     </div>
   )
