@@ -98,9 +98,9 @@ export function MusePanel({
               <span className="truncate font-mono">
                 {fileOf(single)}:{single.line}
               </span>
-            ) : (
+            ) : !mock ? (
               <span className="text-amber-300/80">source not found</span>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="space-y-1.5">
