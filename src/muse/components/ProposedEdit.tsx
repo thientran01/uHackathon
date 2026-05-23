@@ -99,18 +99,15 @@ export function ProposedEdit({
                 icon="↪"
                 label="Redo"
               />
-              {historyControls.canUndo && (
-                <>
-                  <div className="h-3.5 w-px bg-white/10" />
-                  <GhostBtn
-                    onClick={historyControls.onRevert}
-                    disabled={historyControls.loading}
-                    icon="⟲"
-                    label="Revert to original"
-                    danger
-                  />
-                </>
-              )}
+              <div className="h-3.5 w-px bg-white/10" />
+              <GhostBtn
+                onClick={historyControls.onRevert}
+                disabled={!historyControls.canUndo || historyControls.loading}
+                icon="⟲"
+                iconSize="text-[20px] relative -top-0.5"
+                label="Revert to original"
+                danger
+              />
             </div>
           )}
         </div>
@@ -131,12 +128,14 @@ function GhostBtn({
   onClick,
   disabled,
   icon,
+  iconSize = 'text-[13px]',
   label,
   danger = false,
 }: {
   onClick: () => void
   disabled: boolean
   icon: string
+  iconSize?: string
   label: string
   danger?: boolean
 }) {
@@ -152,7 +151,7 @@ function GhostBtn({
           : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
       }`}
     >
-      <span aria-hidden className="text-[13px] leading-none">
+      <span aria-hidden className={`${iconSize} leading-none`}>
         {icon}
       </span>
       {label}

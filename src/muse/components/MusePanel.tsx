@@ -56,15 +56,14 @@ export function MusePanel({
                 label="Redo"
                 icon="↪"
               />
-              {historyControls.canUndo && (
-                <HeaderIconBtn
-                  onClick={historyControls.onRevert}
-                  disabled={historyControls.loading}
-                  label="Revert to original"
-                  icon="⟲"
-                  danger
-                />
-              )}
+              <HeaderIconBtn
+                onClick={historyControls.onRevert}
+                disabled={!historyControls.canUndo || historyControls.loading}
+                label="Revert to original"
+                icon="⟲"
+                iconSize="text-[20px] relative -top-0.5"
+                danger
+              />
               <div className="mx-1 h-3.5 w-px bg-white/10" />
             </>
           )}
@@ -135,12 +134,14 @@ function HeaderIconBtn({
   disabled,
   label,
   icon,
+  iconSize = 'text-sm',
   danger = false,
 }: {
   onClick: () => void
   disabled: boolean
   label: string
   icon: string
+  iconSize?: string
   danger?: boolean
 }) {
   return (
@@ -149,13 +150,13 @@ function HeaderIconBtn({
       disabled={disabled}
       title={label}
       aria-label={label}
-      className={`rounded-md p-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-30 ${
+      className={`rounded-md p-1.5 transition disabled:cursor-not-allowed disabled:opacity-30 ${
         danger
           ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
           : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-200'
       }`}
     >
-      {icon}
+      <span className={`${iconSize} leading-none`}>{icon}</span>
     </button>
   )
 }
