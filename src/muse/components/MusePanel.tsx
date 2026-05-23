@@ -1,4 +1,11 @@
 import type { ReactNode } from 'react'
+import {
+  ArrowCounterClockwise,
+  ArrowUUpLeft,
+  ArrowUUpRight,
+  Sparkle,
+  X,
+} from '@phosphor-icons/react'
 import type { SelectedElement } from '../types'
 import type { HistoryControls } from '../MuseOverlay'
 
@@ -34,7 +41,7 @@ export function MusePanel({
     >
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-zinc-100">
-          <span className="text-accent">✦</span> Muse
+          <Sparkle size={15} weight="fill" className="text-accent" /> Muse
           {mock && (
             <span className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
               mock
@@ -48,20 +55,20 @@ export function MusePanel({
                 onClick={historyControls.onUndo}
                 disabled={!historyControls.canUndo || historyControls.loading}
                 label="Undo"
-                icon="↩"
+                icon={<ArrowUUpLeft size={15} />}
               />
               <HeaderIconBtn
                 onClick={historyControls.onRedo}
                 disabled={!historyControls.canRedo || historyControls.loading}
                 label="Redo"
-                icon="↪"
+                icon={<ArrowUUpRight size={15} />}
               />
               {historyControls.canUndo && (
                 <HeaderIconBtn
                   onClick={historyControls.onRevert}
                   disabled={historyControls.loading}
                   label="Revert to original"
-                  icon="⟲"
+                  icon={<ArrowCounterClockwise size={15} />}
                   danger
                 />
               )}
@@ -73,7 +80,7 @@ export function MusePanel({
             aria-label="Close"
             className="rounded-md p-1 text-zinc-500 transition hover:bg-white/5 hover:text-zinc-200"
           >
-            ✕
+            <X size={15} />
           </button>
         </div>
       </header>
@@ -108,9 +115,9 @@ export function MusePanel({
                     <button
                       onClick={() => onRemove(el.key)}
                       aria-label={`Remove ${el.tag}`}
-                      className="text-zinc-500 transition hover:text-zinc-200"
+                      className="inline-flex text-zinc-500 transition hover:text-zinc-200"
                     >
-                      ✕
+                      <X size={11} />
                     </button>
                   )}
                 </span>
@@ -140,7 +147,7 @@ function HeaderIconBtn({
   onClick: () => void
   disabled: boolean
   label: string
-  icon: string
+  icon: ReactNode
   danger?: boolean
 }) {
   return (
@@ -149,7 +156,7 @@ function HeaderIconBtn({
       disabled={disabled}
       title={label}
       aria-label={label}
-      className={`rounded-md p-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-30 ${
+      className={`rounded-md p-1.5 transition disabled:cursor-not-allowed disabled:opacity-30 ${
         danger
           ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
           : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-200'
