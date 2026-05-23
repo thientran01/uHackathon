@@ -268,7 +268,7 @@ export function MuseOverlay() {
   const hasHistory = past.length > 0 || future.length > 0
 
   const single = selection.length === 1 ? selection[0] : null
-  const unmappable = !!single && !single.fileName
+  const unmappable = !MOCK && !!single && !single.fileName
   const allAnswered =
     pending?.kind === 'ask' &&
     pending.questions.every((_, i) => (answers[i] ?? '').trim() !== '')
