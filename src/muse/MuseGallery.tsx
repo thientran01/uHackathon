@@ -4,11 +4,24 @@ import { IntentForm } from './components/IntentForm'
 import { MuseFab } from './components/MuseFab'
 import { MusePanel } from './components/MusePanel'
 import { ProposedEdit } from './components/ProposedEdit'
-import { HoverHighlight, SelectBanner } from './components/SelectionOverlay'
+import {
+  HoverHighlight,
+  SelectBanner,
+  SelectionTray,
+} from './components/SelectionOverlay'
 import { ErrorNote, UnmappableNote } from './components/StatusNote'
-import { fxElement, fxNewContent, fxOriginal, fxQuestions, fxRationale } from './fixtures'
+import { fxEdits, fxElement, fxOriginals, fxQuestions, fxRationale } from './fixtures'
+import type { SelectedElement } from './types'
 
 const noop = () => {}
+const fxElement2: SelectedElement = {
+  fileName: 'src/demo/CTA.tsx',
+  line: 12,
+  tag: 'button',
+  classNames: 'rounded-lg bg-slate-900 px-6 py-3',
+  text: 'Get started',
+  key: 'src/demo/CTA.tsx:12:6:button',
+}
 
 function Cell({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -58,20 +71,23 @@ export function MuseGallery() {
             <HoverHighlight rect={{ top: 8, left: 8, width: 176, height: 80 }} />
           </div>
         </Cell>
+        <Cell title="Batch tray">
+          <SelectionTray count={3} onDesign={noop} />
+        </Cell>
 
         <Cell title="Panel — intent">
-          <MusePanel element={fxElement} onClose={noop}>
+          <MusePanel elements={[fxElement]} onClose={noop}>
             <IntentForm value="" onChange={noop} onSubmit={noop} loading={false} />
           </MusePanel>
         </Cell>
         <Cell title="Panel — thinking">
-          <MusePanel element={fxElement} onClose={noop}>
+          <MusePanel elements={[fxElement]} onClose={noop}>
             <IntentForm value="make this feel more premium" onChange={noop} onSubmit={noop} loading />
           </MusePanel>
         </Cell>
 
         <Cell title="Panel — clarifying questions">
-          <MusePanel element={fxElement} onClose={noop}>
+          <MusePanel elements={[fxElement]} onClose={noop}>
             <ClarifyingQuestions
               questions={fxQuestions}
               answers={{}}
@@ -83,7 +99,7 @@ export function MuseGallery() {
           </MusePanel>
         </Cell>
         <Cell title="Panel — questions answered">
-          <MusePanel element={fxElement} onClose={noop}>
+          <MusePanel elements={[fxElement]} onClose={noop}>
             <ClarifyingQuestions
               questions={fxQuestions}
               answers={answers}
@@ -95,12 +111,18 @@ export function MuseGallery() {
           </MusePanel>
         </Cell>
 
-        <Cell title="Panel — proposed edit">
-          <MusePanel element={fxElement} onClose={noop}>
+        <Cell title="Panel — batch (3 elements)">
+          <MusePanel elements={[fxElement, fxElement2, { ...fxElement, key: 'x3', tag: 'p' }]} onClose={noop} onRemove={noop}>
+            <IntentForm value="" onChange={noop} onSubmit={noop} loading={false} />
+          </MusePanel>
+        </Cell>
+
+        <Cell title="Panel — proposed edit (multi-file pager)">
+          <MusePanel elements={[fxElement, fxElement2]} onClose={noop} onRemove={noop}>
             <ProposedEdit
+              edits={fxEdits}
+              originals={fxOriginals}
               rationale={fxRationale}
-              original={fxOriginal}
-              newContent={fxNewContent}
               applied={false}
               loading={false}
               onApprove={noop}
@@ -108,12 +130,12 @@ export function MuseGallery() {
             />
           </MusePanel>
         </Cell>
-        <Cell title="Panel — applied (mock badge)">
-          <MusePanel element={fxElement} mock onClose={noop}>
+        <Cell title="Panel — applied">
+          <MusePanel elements={[fxElement, fxElement2]} mock onClose={noop} onRemove={noop}>
             <ProposedEdit
+              edits={fxEdits}
+              originals={fxOriginals}
               rationale={fxRationale}
-              original={fxOriginal}
-              newContent={fxNewContent}
               applied
               loading={false}
               onApprove={noop}
@@ -123,13 +145,13 @@ export function MuseGallery() {
         </Cell>
 
         <Cell title="Panel — error">
-          <MusePanel element={fxElement} onClose={noop}>
+          <MusePanel elements={[fxElement]} onClose={noop}>
             <IntentForm value="" onChange={noop} onSubmit={noop} loading={false} />
             <ErrorNote message="Muse did not return an action. Try rephrasing." />
           </MusePanel>
         </Cell>
         <Cell title="Panel — source not found">
-          <MusePanel element={{ ...fxElement, fileName: '' }} onClose={noop}>
+          <MusePanel elements={[{ ...fxElement, fileName: '' }]} onClose={noop}>
             <UnmappableNote />
           </MusePanel>
         </Cell>
