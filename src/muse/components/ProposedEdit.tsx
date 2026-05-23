@@ -107,18 +107,14 @@ export function ProposedEdit({
                 icon={<ArrowUUpRight size={14} />}
                 label="Redo"
               />
-              {historyControls.canUndo && (
-                <>
-                  <div className="h-3.5 w-px bg-white/10" />
-                  <GhostBtn
-                    onClick={historyControls.onRevert}
-                    disabled={historyControls.loading}
-                    icon={<ArrowCounterClockwise size={14} />}
-                    label="Revert to original"
-                    danger
-                  />
-                </>
-              )}
+              <div className="h-3.5 w-px bg-white/10" />
+              <GhostBtn
+                onClick={historyControls.onRevert}
+                disabled={!historyControls.canUndo || historyControls.loading}
+                icon={<ArrowCounterClockwise size={14} />}
+                label="Revert to original"
+                danger
+              />
             </div>
           )}
         </div>

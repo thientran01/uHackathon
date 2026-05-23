@@ -63,15 +63,13 @@ export function MusePanel({
                 label="Redo"
                 icon={<ArrowUUpRight size={15} />}
               />
-              {historyControls.canUndo && (
-                <HeaderIconBtn
-                  onClick={historyControls.onRevert}
-                  disabled={historyControls.loading}
-                  label="Revert to original"
-                  icon={<ArrowCounterClockwise size={15} />}
-                  danger
-                />
-              )}
+              <HeaderIconBtn
+                onClick={historyControls.onRevert}
+                disabled={!historyControls.canUndo || historyControls.loading}
+                label="Revert to original"
+                icon={<ArrowCounterClockwise size={15} />}
+                danger
+              />
               <div className="mx-1 h-3.5 w-px bg-white/10" />
             </>
           )}

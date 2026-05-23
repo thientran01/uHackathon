@@ -15,18 +15,14 @@ export function UndoRedoBar({ canUndo, canRedo, loading, onUndo, onRedo, onRever
     <div className="pointer-events-auto flex items-center gap-0.5 rounded-2xl bg-ink/95 px-1.5 py-1.5 shadow-xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl">
       <HistoryBtn onClick={onUndo} disabled={!canUndo || loading} label="Undo" icon={<ArrowUUpLeft size={15} />} />
       <HistoryBtn onClick={onRedo} disabled={!canRedo || loading} label="Redo" icon={<ArrowUUpRight size={15} />} />
-      {canUndo && (
-        <>
-          <div className="mx-1.5 h-3.5 w-px bg-white/10" />
-          <HistoryBtn
-            onClick={onRevert}
-            disabled={loading}
-            label="Revert to original"
-            icon={<ArrowCounterClockwise size={15} />}
-            danger
-          />
-        </>
-      )}
+      <div className="mx-1.5 h-3.5 w-px bg-white/10" />
+      <HistoryBtn
+        onClick={onRevert}
+        disabled={!canUndo || loading}
+        label="Revert to original"
+        icon={<ArrowCounterClockwise size={15} />}
+        danger
+      />
     </div>
   )
 }
