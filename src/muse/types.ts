@@ -35,6 +35,13 @@ export type ChatResponse = {
   error?: string
 }
 
+// One applied batch — covers every file changed in a single apply, so undo/redo
+// restores the whole multi-file change as a unit.
+export type HistoryEntry = {
+  files: Array<{ fileName: string; before: string; after: string }>
+  label: string
+}
+
 // Anthropic message shape we send back and forth.
 export type ChatMessage =
   | { role: 'user'; content: string }

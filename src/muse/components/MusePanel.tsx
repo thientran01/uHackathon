@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { SelectedElement } from '../types'
+import type { HistoryControls } from '../MuseOverlay'
 
 const fileOf = (e: SelectedElement) => (e.fileName ? e.fileName.split(/[\\/]/).pop() : null)
 
@@ -8,6 +9,7 @@ export function MusePanel({
   mock = false,
   stepKey,
   closing = false,
+  historyControls,
   onClose,
   onRemove,
   children,
@@ -16,6 +18,7 @@ export function MusePanel({
   mock?: boolean
   stepKey?: string
   closing?: boolean
+  historyControls?: HistoryControls
   onClose: () => void
   onRemove?: (key: string) => void
   children: ReactNode
@@ -38,13 +41,41 @@ export function MusePanel({
             </span>
           )}
         </div>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="rounded-md p-1 text-zinc-500 transition hover:bg-white/5 hover:text-zinc-200"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-0.5">
+          {historyControls && (
+            <>
+              <HeaderIconBtn
+                onClick={historyControls.onUndo}
+                disabled={!historyControls.canUndo || historyControls.loading}
+                label="Undo"
+                icon="↩"
+              />
+              <HeaderIconBtn
+                onClick={historyControls.onRedo}
+                disabled={!historyControls.canRedo || historyControls.loading}
+                label="Redo"
+                icon="↪"
+              />
+              {historyControls.canUndo && (
+                <HeaderIconBtn
+                  onClick={historyControls.onRevert}
+                  disabled={historyControls.loading}
+                  label="Revert to original"
+                  icon="⟲"
+                  danger
+                />
+              )}
+              <div className="mx-1 h-3.5 w-px bg-white/10" />
+            </>
+          )}
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-md p-1 text-zinc-500 transition hover:bg-white/5 hover:text-zinc-200"
+          >
+            ✕
+          </button>
+        </div>
       </header>
 
       {/* Target(s) */}
@@ -96,5 +127,35 @@ export function MusePanel({
         </div>
       </div>
     </div>
+  )
+}
+
+function HeaderIconBtn({
+  onClick,
+  disabled,
+  label,
+  icon,
+  danger = false,
+}: {
+  onClick: () => void
+  disabled: boolean
+  label: string
+  icon: string
+  danger?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+      className={`rounded-md p-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-30 ${
+        danger
+          ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
+          : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-200'
+      }`}
+    >
+      {icon}
+    </button>
   )
 }
