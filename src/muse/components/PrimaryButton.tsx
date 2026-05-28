@@ -23,7 +23,7 @@ export function PrimaryButton({
     <button
       data-testid={testId}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || loading}
       className="w-full rounded-xl bg-fg py-2.5 text-sm font-semibold text-surface shadow-sm transition hover:bg-fg/90 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100 motion-reduce:active:scale-100"
     >
       {loading && busy ? busy : idle}

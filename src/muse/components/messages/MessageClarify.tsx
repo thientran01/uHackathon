@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import type { ClarifyingQuestion } from '../types'
-import { PrimaryButton } from './PrimaryButton'
+import type { ClarifyingQuestion } from '../../types'
+import { PrimaryButton } from '../PrimaryButton'
 
-export function ClarifyingQuestions({
+export function MessageClarify({
   questions,
   answers,
   onSelect,
   onContinue,
   loading,
   allAnswered,
+  active,
+  answeredWith,
 }: {
   questions: ClarifyingQuestion[]
   answers: Record<number, string>
@@ -16,9 +18,31 @@ export function ClarifyingQuestions({
   onContinue: () => void
   loading: boolean
   allAnswered: boolean
+  /** Active = renders interactive option buttons. Inactive (a newer bubble
+   *  has taken over) = collapsed read-only summary of what was asked/answered. */
+  active: boolean
+  /** Frozen answers snapshot for inactive rendering. The store clears the
+   *  live `answers` map when a new clarify activates, so inactive bubbles
+   *  must use their own snapshot to avoid flashing blank. */
+  answeredWith?: Record<number, string>
 }) {
-  // Which questions have the "Something else" custom input open.
   const [otherOpen, setOtherOpen] = useState<Record<number, boolean>>({})
+
+  if (!active) {
+    const frozen = answeredWith ?? {}
+    return (
+      <div className="space-y-1.5 text-sm">
+        {questions.map((q, qi) => (
+          <div key={qi} className="text-fg-muted">
+            <span className="text-fg">{q.question}</span>
+            {frozen[qi] && (
+              <span className="text-fg-faint"> → {frozen[qi]}</span>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -50,13 +74,12 @@ export function ClarifyingQuestions({
                 )
               })}
 
-              {/* Escape hatch — describe it in your own words (like AskUserQuestion's "Other"). */}
               <button
                 data-testid="muse-option-other"
                 onClick={() => {
                   if (!isOther) {
                     setOtherOpen((o) => ({ ...o, [qi]: true }))
-                    onSelect(qi, '') // start blank; the input below captures the text
+                    onSelect(qi, '')
                   }
                 }}
                 className={`w-full rounded-xl border p-3 text-left transition active:scale-[0.99] ${

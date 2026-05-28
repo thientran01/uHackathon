@@ -35,6 +35,11 @@ export default {
           muted: 'rgb(var(--muse-fg-muted) / <alpha-value>)',
           faint: 'rgb(var(--muse-fg-faint) / <alpha-value>)',
         },
+        // Diff colors — tinted bg + readable text, distinct triplets per theme.
+        'diff-add': 'rgb(var(--muse-diff-add-tint) / <alpha-value>)',
+        'diff-add-text': 'rgb(var(--muse-diff-add-text) / <alpha-value>)',
+        'diff-del': 'rgb(var(--muse-diff-del-tint) / <alpha-value>)',
+        'diff-del-text': 'rgb(var(--muse-diff-del-text) / <alpha-value>)',
       },
       // Muse motion — applied per Emil Kowalski's principles:
       // ease-out for entrances, custom curve, under 300ms, start scale > 0.

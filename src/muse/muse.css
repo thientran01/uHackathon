@@ -25,6 +25,14 @@
   --muse-fg: 245 239 230;             /* cream #F5EFE6 */
   --muse-fg-muted: 181 169 152;       /* warm gray #B5A998 */
   --muse-fg-faint: 124 114 100;       /* dimmer warm gray #7C7264 */
+  /* Diff tokens — custom warm muted greens and terracotta-reds (no Tailwind
+   * primaries — those still felt cartoonish against the Phantom palette).
+   * Distinct from the burgundy accent (#7F2F2F) so a del-line is never
+   * confused with the brand color. */
+  --muse-diff-add-tint: 74 145 96;    /* clean forest green — less yellow, no cyan */
+  --muse-diff-add-text: 155 215 175;  /* lighter forest — readable on warm dark */
+  --muse-diff-del-tint: 185 75 85;    /* clean cherry red — not pink, not terracotta */
+  --muse-diff-del-text: 230 165 170;  /* lighter cherry — readable on warm dark */
 }
 
 [data-muse-ui][data-theme='light'] {
@@ -37,4 +45,10 @@
   --muse-fg: 31 26 18;                /* dark warm ink #1F1A12 */
   --muse-fg-muted: 111 102 87;        /* warm gray-brown #6F6657 */
   --muse-fg-faint: 156 146 127;       /* lighter warm gray #9C927F */
+  /* Light theme — deeper warm muted values readable on cream. Olive-green
+   * for add, deep terracotta for del. Both distinct from the burgundy accent. */
+  --muse-diff-add-tint: 40 110 60;    /* deep clean forest green */
+  --muse-diff-add-text: 18 60 30;     /* very deep forest — readable on cream */
+  --muse-diff-del-tint: 175 40 55;    /* deep clean cherry — distinct from burgundy accent */
+  --muse-diff-del-text: 95 18 30;     /* very deep cherry — readable on cream */
 }

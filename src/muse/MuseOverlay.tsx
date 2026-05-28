@@ -4,12 +4,12 @@ import { museChat, museWrite } from './api'
 import { MOCK } from './config'
 import { useSelection } from './useSelection'
 import { useHostTheme } from './hooks/useHostTheme'
-import { museStore, useMuseStore } from './store'
-import { ClarifyingQuestions } from './components/ClarifyingQuestions'
-import { IntentForm } from './components/IntentForm'
+import { museStore, nextThreadId, useMuseStore } from './store'
+import { ActiveTargetStrip } from './components/ActiveTargetStrip'
+import { Composer } from './components/Composer'
 import { MuseFab } from './components/MuseFab'
 import { MusePanel } from './components/MusePanel'
-import { ProposedEdit } from './components/ProposedEdit'
+import { MuseThread } from './components/MuseThread'
 import { RevertConfirmDialog } from './components/RevertConfirmDialog'
 import { UndoRedoBar } from './components/UndoRedoBar'
 import {
@@ -18,13 +18,14 @@ import {
   SelectionMarkers,
   SelectionTray,
 } from './components/SelectionOverlay'
-import { ErrorNote, UnmappableNote } from './components/StatusNote'
 import type {
   AskInput,
   ChatMessage,
   ContentBlock,
+  FileEdit,
   HistoryEntry,
   ProposeInput,
+  SelectedElement,
   ToolUseBlock,
 } from './types'
 
@@ -46,16 +47,14 @@ export function MuseOverlay() {
   const { active, setActive, hoverRect, hoverInfo, cursor, selection, setSelection, clearSelection } =
     useSelection()
 
-  // Domain state lives in museStore; component-lifecycle state stays local.
   const {
-    intent,
-    messages,
+    thread,
+    draft,
     pending,
     originals,
     answers,
     loading,
     error,
-    applied,
     past,
     future,
     historyLoading,
@@ -69,16 +68,38 @@ export function MuseOverlay() {
 
   useHostTheme(rootRef)
 
-  // Reset the conversation when the SET of selected elements changes. Keep the
-  // typed intent when the user is only *removing* an element from the batch, so
-  // editing the selection mid-flow doesn't force a retype.
+  // When the SET of selected elements changes:
+  //   - Empty selection → wipe conversation.
+  //   - First-ever target this session → fresh thread (keep typed draft).
+  //   - Shrink or grow of the same focus (one set is a subset of the other)
+  //     → no handoff, keep the thread. This covers shift-click to add or
+  //     remove batch elements without "switching focus."
+  //   - Truly different selection (some elements swapped) → append handoff.
   const selectionKey = selection.map((s) => s.key).sort().join('|')
   useEffect(() => {
-    const keys = selection.map((s) => s.key)
-    const prev = prevKeysRef.current
-    const shrunk = keys.length < prev.length && keys.every((k) => prev.includes(k))
-    prevKeysRef.current = keys
-    museStore.resetConversation(shrunk)
+    const curKeys = selection.map((s) => s.key)
+    const prevKeys = prevKeysRef.current
+
+    if (curKeys.length === 0) {
+      prevKeysRef.current = []
+      museStore.resetConversation()
+      return
+    }
+    if (prevKeys.length === 0) {
+      prevKeysRef.current = curKeys
+      museStore.resetConversation(true)
+      return
+    }
+    // Pure shrink (cur ⊆ prev) OR pure grow (prev ⊆ cur) = no handoff.
+    const curInPrev = curKeys.every((k) => prevKeys.includes(k))
+    const prevInCur = prevKeys.every((k) => curKeys.includes(k))
+    prevKeysRef.current = curKeys
+    if (curInPrev || prevInCur) return
+
+    const cur = selection[0]
+    if (cur) {
+      museStore.appendThread({ id: nextThreadId(), kind: 'target-handoff', target: cur })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionKey])
 
@@ -89,10 +110,6 @@ export function MuseOverlay() {
       clearSelection()
       setClosing(false)
     }, EXIT_MS)
-  }
-
-  function refineAgain() {
-    museStore.resetConversation()
   }
 
   function removeChip(key: string) {
@@ -122,14 +139,14 @@ export function MuseOverlay() {
         return
       }
       if (tu.name === 'ask_clarifying_questions') {
+        const questions = (tu.input as AskInput).questions
         museStore.setState({
           answers: {},
-          pending: { kind: 'ask', toolUseId: tu.id, questions: (tu.input as AskInput).questions },
+          pending: { kind: 'ask', toolUseId: tu.id, questions },
         })
+        museStore.appendThread({ id: nextThreadId(), kind: 'clarify', toolUseId: tu.id, questions })
       } else {
         const input = tu.input as ProposeInput
-        // Bound writes to the files Muse actually read this turn (the selected
-        // elements' files) — never an arbitrary in-src file the model returns.
         const allowed = new Set(Object.keys(resp.originals ?? {}))
         const edits = (Array.isArray(input.edits) ? input.edits : [])
           .map((e) => ({ fileName: normPath(e.fileName ?? ''), newContent: e.newContent }))
@@ -138,9 +155,11 @@ export function MuseOverlay() {
           museStore.setState({ error: "Muse didn't return changes for the selected element(s). Try rephrasing." })
           return
         }
+        const rationale = input.rationale ?? ''
         museStore.setState({
-          pending: { kind: 'propose', toolUseId: tu.id, edits, rationale: input.rationale ?? '' },
+          pending: { kind: 'propose', toolUseId: tu.id, edits, rationale },
         })
+        museStore.appendThread({ id: nextThreadId(), kind: 'option-set', toolUseId: tu.id, edits, rationale })
       }
     } catch (e) {
       museStore.setState({ error: (e as Error).message })
@@ -149,39 +168,68 @@ export function MuseOverlay() {
     }
   }
 
-  function start() {
-    if (!intent.trim()) return
-    runChat([{ role: 'user', content: intent.trim() }])
+  // Send the composer text as the next user message. Reads from store.getState()
+  // so a rapid double-submit can't see a stale closed-over `pending` / `messages`.
+  function sendDraft() {
+    const text = draft.trim()
+    if (!text) return
+    const s = museStore.getState()
+    museStore.setState({ draft: '' })
+    museStore.appendThread({ id: nextThreadId(), kind: 'user', text })
+    // If a clarify is currently pending and the user typed in the composer
+    // instead of using the option buttons, freeze whatever partial selections
+    // they had so the now-inactive clarify renders consistently.
+    if (s.pending?.kind === 'ask') museStore.snapshotLastClarifyAnswers(s.answers)
+    const next: ChatMessage = s.pending?.kind === 'ask'
+      ? { role: 'user', content: [{ type: 'tool_result', tool_use_id: s.pending.toolUseId, content: text }] }
+      : { role: 'user', content: text }
+    runChat([...s.messages, next])
   }
 
   function submitAnswers() {
-    if (!pending || pending.kind !== 'ask') return
-    const text = pending.questions
-      .map((q, i) => `${q.question} → ${answers[i] ?? '(no preference)'}`)
+    const s = museStore.getState()
+    if (!s.pending || s.pending.kind !== 'ask') return
+    // Freeze the chosen answers into the clarify bubble before the live
+    // `answers` map gets cleared for the next turn.
+    museStore.snapshotLastClarifyAnswers(s.answers)
+    // No user bubble — the inactive clarify summary covers it.
+    const text = s.pending.questions
+      .map((q, i) => `${q.question} → ${s.answers[i] ?? '(no preference)'}`)
       .join('\n')
     runChat([
-      ...messages,
-      { role: 'user', content: [{ type: 'tool_result', tool_use_id: pending.toolUseId, content: text }] },
+      ...s.messages,
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: s.pending.toolUseId, content: text }] },
     ])
   }
 
-  async function approve() {
-    if (!pending || pending.kind !== 'propose') return
+  async function approve(edits: FileEdit[]) {
+    const s = museStore.getState()
+    if (!s.pending || s.pending.kind !== 'propose' || s.loading) return
+    const rationale = s.pending.rationale
     museStore.setState({ loading: true, error: null })
     try {
-      await museWrite(pending.edits)
-      // Record the whole batch as one history entry (before/after per file).
-      // Strip live DOM node refs — they'll be stale after HMR reloads the component.
+      await museWrite(edits)
       const entry: HistoryEntry = {
-        files: pending.edits.map((e) => ({
+        files: edits.map((e) => ({
           fileName: e.fileName,
-          before: originals[e.fileName] ?? '',
+          before: s.originals[e.fileName] ?? '',
           after: e.newContent,
         })),
         elements: selection,
-        label: pending.rationale.slice(0, 80),
+        label: rationale.slice(0, 80),
       }
-      museStore.setState((s) => ({ past: [...s.past, entry], future: [], applied: true }))
+      museStore.setState((cur) => ({
+        past: [...cur.past, entry],
+        future: [],
+        applied: true,
+        pending: null,
+      }))
+      museStore.appendThread({
+        id: nextThreadId(),
+        kind: 'applied',
+        fileCount: edits.length,
+        rationale: '',
+      })
     } catch (e) {
       museStore.setState({ error: (e as Error).message })
     } finally {
@@ -231,7 +279,6 @@ export function MuseOverlay() {
     if (past.length === 0) return
     museStore.setState({ historyLoading: true, error: null })
     try {
-      // Earliest (pre-Muse) content for every file touched this session.
       const earliest = new Map<string, string>()
       for (const entry of past) {
         for (const f of entry.files) if (!earliest.has(f.fileName)) earliest.set(f.fileName, f.before)
@@ -262,11 +309,6 @@ export function MuseOverlay() {
     pending.questions.every((_, i) => (answers[i] ?? '').trim() !== '')
   const panelOpen = selection.length >= 1 && !active
   const showMarkers = selection.length >= 1
-  const stepKey = unmappable
-    ? 'unmappable'
-    : messages.length === 0
-      ? 'intent'
-      : (pending?.kind ?? 'loading')
 
   // Keyboard for both phases + click-outside while the panel is open.
   useEffect(() => {
@@ -274,9 +316,9 @@ export function MuseOverlay() {
       if (active) {
         if (e.key === 'Enter' && selection.length >= 1) {
           e.preventDefault()
-          setActive(false) // commit the batch
+          setActive(false)
         }
-        return // Esc is handled in useSelection during select mode
+        return
       }
       if (selection.length === 0 || closing) return
       if (e.key === 'Escape') {
@@ -290,9 +332,6 @@ export function MuseOverlay() {
         if (pending?.kind === 'ask' && allAnswered && !loading) {
           e.preventDefault()
           submitAnswers()
-        } else if (pending?.kind === 'propose' && !applied && !loading) {
-          e.preventDefault()
-          approve()
         }
       }
     }
@@ -312,7 +351,7 @@ export function MuseOverlay() {
       if (onDocClick) document.removeEventListener('click', onDocClick, true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, selection, closing, pending, allAnswered, applied, loading])
+  }, [active, selection, closing, pending, allAnswered, loading])
 
   return (
     <div ref={rootRef} data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
@@ -350,49 +389,55 @@ export function MuseOverlay() {
       {panelOpen && (
         <div className="absolute bottom-6 right-6">
           <MusePanel
-            elements={selection}
             mock={MOCK}
-            stepKey={stepKey}
             closing={closing}
             loading={loading || historyLoading}
             historyControls={hasHistory ? historyControls : undefined}
             onClose={requestClose}
-            onRemove={removeChip}
           >
+            <ActiveTargetStrip
+              elements={selection}
+              mock={MOCK}
+              onRemove={removeChip}
+              onSwapTarget={() => setActive(true)}
+            />
             {unmappable ? (
-              <UnmappableNote />
-            ) : messages.length === 0 ? (
-              <IntentForm
-                value={intent}
-                onChange={(v) => museStore.setState({ intent: v })}
-                onSubmit={start}
-                loading={loading}
-              />
-            ) : pending?.kind === 'ask' ? (
-              <ClarifyingQuestions
-                questions={pending.questions}
-                answers={answers}
-                onSelect={(qi, label) =>
-                  museStore.setState((s) => ({ answers: { ...s.answers, [qi]: label } }))
-                }
-                onContinue={submitAnswers}
-                loading={loading}
-                allAnswered={allAnswered}
-              />
-            ) : pending?.kind === 'propose' ? (
-              <ProposedEdit
-                edits={pending.edits}
-                originals={originals}
-                rationale={pending.rationale}
-                applied={applied}
-                loading={loading}
-                onApprove={approve}
-                onRefine={refineAgain}
-                historyControls={applied ? historyControls : undefined}
-              />
-            ) : null}
-
-            {error && <ErrorNote message={error} />}
+              <div className="flex-1 overflow-y-auto px-4 py-3.5">
+                <p className="text-sm leading-relaxed text-amber-300/80">
+                  Couldn't map this element to a source file. Try clicking page content — it works best
+                  inside <code className="rounded bg-line/10 px-1 text-amber-200">src/demo/</code>.
+                </p>
+              </div>
+            ) : (
+              <>
+                <MuseThread
+                  thread={thread}
+                  pending={pending}
+                  originals={originals}
+                  loading={loading}
+                  answers={answers}
+                  onSelectAnswer={(qi, label) =>
+                    museStore.setState((s) => ({ answers: { ...s.answers, [qi]: label } }))
+                  }
+                  onContinue={submitAnswers}
+                  allAnswered={allAnswered}
+                  onApprove={approve}
+                />
+                {error && (
+                  <div className="px-3 pb-2">
+                    <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300 ring-1 ring-rose-500/20">
+                      {error}
+                    </p>
+                  </div>
+                )}
+                <Composer
+                  value={draft}
+                  onChange={(v) => museStore.setState({ draft: v })}
+                  onSubmit={sendDraft}
+                  loading={loading}
+                />
+              </>
+            )}
           </MusePanel>
         </div>
       )}

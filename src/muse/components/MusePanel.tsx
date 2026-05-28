@@ -5,48 +5,38 @@ import {
   ArrowUUpRight,
   X,
 } from '@phosphor-icons/react'
-import type { SelectedElement } from '../types'
 import type { HistoryControls } from '../MuseOverlay'
 import { UfoIcon } from './UfoIcon'
-import { ThinkingText } from './ThinkingText'
 
-const fileOf = (e: SelectedElement) => (e.fileName ? e.fileName.split(/[\\/]/).pop() : null)
-
+// Panel chrome: rounded card + header + a flexbox column slot below.
+// Content (target strip + thread + composer) is composed in MuseOverlay
+// and dropped into the children slot. MusePanel intentionally knows
+// nothing about the thread or its state — it's just the surface.
 export function MusePanel({
-  elements,
   mock = false,
-  stepKey,
   closing = false,
   loading = false,
   historyControls,
   onClose,
-  onRemove,
   children,
 }: {
-  elements: SelectedElement[]
   mock?: boolean
-  stepKey?: string
   closing?: boolean
   loading?: boolean
   historyControls?: HistoryControls
   onClose: () => void
-  onRemove?: (key: string) => void
   children: ReactNode
 }) {
-  const single = elements.length === 1 ? elements[0] : null
-
   return (
-    // Tool surface — themed via CSS vars on [data-muse-ui][data-theme=*].
-    // Grows out of the bottom-right (the FAB); reverses on close.
     <div
-      className={`pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right flex-col overflow-hidden rounded-2xl bg-surface/95 text-fg shadow-2xl shadow-black/40 ring-1 ring-line/10 backdrop-blur-xl motion-reduce:animate-none ${
+      className={`pointer-events-auto flex max-h-[40vh] w-[380px] origin-bottom-right flex-col overflow-hidden rounded-2xl bg-surface/95 text-fg shadow-2xl shadow-black/40 ring-1 ring-line/10 backdrop-blur-xl motion-reduce:animate-none ${
         closing ? 'animate-muse-panel-out' : 'animate-muse-panel'
       }`}
     >
       <header className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-fg">
           <UfoIcon size={16} loading={loading} className="text-accent" />
-          {loading ? <ThinkingText /> : 'Muse'}
+          Muse
           {mock && (
             <span className="ml-1 rounded border border-line/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fg-faint">
               mock
@@ -88,54 +78,7 @@ export function MusePanel({
         </div>
       </header>
 
-      {/* Target(s) */}
-      <div className="border-y border-line/[0.07] bg-line/[0.02] px-4 py-2 text-xs text-fg-faint">
-        {single ? (
-          <div className="flex items-center gap-2">
-            <span className="rounded bg-line/5 px-1.5 py-0.5 font-mono text-fg ring-1 ring-line/10">
-              &lt;{single.tag}&gt;
-            </span>
-            {fileOf(single) ? (
-              <span className="truncate font-mono">
-                {fileOf(single)}:{single.line}
-              </span>
-            ) : !mock ? (
-              <span className="text-amber-300/80">source not found</span>
-            ) : null}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <div className="font-medium text-fg-muted">Editing {elements.length} elements</div>
-            <div className="flex flex-wrap gap-1.5">
-              {elements.map((el) => (
-                <span
-                  key={el.key}
-                  title={`${fileOf(el)}:${el.line}`}
-                  className="inline-flex items-center gap-1 rounded bg-line/5 px-1.5 py-0.5 font-mono text-fg ring-1 ring-line/10"
-                >
-                  &lt;{el.tag}&gt;
-                  {onRemove && (
-                    <button
-                      onClick={() => onRemove(el.key)}
-                      aria-label={`Remove ${el.tag}`}
-                      className="inline-flex text-fg-faint transition hover:text-fg"
-                    >
-                      <X size={11} />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 py-3.5">
-        {/* Keyed so each step swap replays the subtle blur-rise transition. */}
-        <div key={stepKey} className="animate-muse-step motion-reduce:animate-none">
-          {children}
-        </div>
-      </div>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </div>
   )
 }

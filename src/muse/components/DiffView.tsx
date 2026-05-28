@@ -9,13 +9,13 @@ export function DiffView({ original, newContent }: { original: string; newConten
           key={i}
           className={
             l.type === 'add'
-              ? '-mx-3 bg-emerald-500/10 px-3 text-emerald-300/90'
+              ? '-mx-3 bg-diff-add/35 px-3 text-diff-add-text'
               : l.type === 'del'
-                ? '-mx-3 bg-rose-500/10 px-3 text-rose-300/90'
+                ? '-mx-3 bg-diff-del/35 px-3 text-diff-del-text'
                 : 'text-fg-faint'
           }
         >
-          <span className="select-none opacity-50">
+          <span className="select-none font-bold">
             {l.type === 'add' ? '+ ' : l.type === 'del' ? '- ' : '  '}
           </span>
           {l.text}

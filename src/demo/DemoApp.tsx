@@ -45,11 +45,15 @@ type Route = 'home' | 'matches' | 'leader' | 'sched' | 'gear'
 // ── DemoApp ──────────────────────────────────────────────────────────────────
 
 export default function DemoApp() {
+  // Skip the AccessGate by default — drop straight into the app so we can
+  // iterate on Muse without re-signing in on every reload. To demo the gate
+  // flow, hit "Sign out / reset" in the TweaksPanel (clears sessionStorage).
   const [me, setMe] = useState<Partial<Player> | null>(() => {
     try {
       const raw = sessionStorage.getItem('rk_me')
-      return raw ? JSON.parse(raw) : null
-    } catch { return null }
+      if (raw) return JSON.parse(raw)
+    } catch {}
+    return { id: 'p12', name: 'Casey Anderson', handle: 'dinkmaster', email: 'you@court.club', skill: '2.5', favHand: 'right', isMe: true }
   })
   const [route, setRoute] = useState<Route>('home')
   const [logOpen, setLogOpen] = useState(false)
