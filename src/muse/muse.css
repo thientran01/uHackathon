@@ -2,33 +2,39 @@
  * `rgb(var(--muse-foo) / <alpha-value>)`) — values here are space-separated RGB
  * triplets so the Tailwind alpha syntax works.
  *
+ * Palette: Phantom-inspired warm system.
+ *   Light  = parchment cream + dark warm ink + coral accent.
+ *   Dark   = warm near-black + cream text + same coral accent.
+ *
+ * The coral accent stays consistent across themes for brand recognition;
+ * accent-hover shifts slightly per theme so the hover state reads on its
+ * respective surface.
+ *
  * The defaults are dark; `[data-theme=light]` overrides flip to light.
  * useHostTheme() sets the data-theme attribute on the [data-muse-ui] root
- * based on the host app's prefers-color-scheme + `html.dark` class.
- *
- * `accent` stays the same across themes — brand consistency. `accent-hover`
- * shifts slightly darker on light so it reads on a white surface.
+ * based on the host app's prefers-color-scheme, html.dark/.light class, or
+ * html[data-theme] attribute.
  */
 [data-muse-ui] {
-  --muse-accent: 61 99 255;
-  --muse-accent-hover: 85 119 255;
-  --muse-surface: 16 16 19;
-  --muse-surface-soft: 23 23 27;
-  --muse-surface-raised: 31 31 36;
-  --muse-line: 255 255 255;
-  --muse-fg: 244 244 245;
-  --muse-fg-muted: 161 161 170;
-  --muse-fg-faint: 113 113 122;
+  --muse-accent: 224 123 79;          /* coral #E07B4F */
+  --muse-accent-hover: 232 140 94;    /* lighter coral for hover on dark */
+  --muse-surface: 20 18 16;           /* warm near-black #141210 */
+  --muse-surface-soft: 28 26 23;      /* #1C1A17 */
+  --muse-surface-raised: 38 35 31;    /* #26231F */
+  --muse-line: 245 239 230;           /* cream, used at low alpha for borders */
+  --muse-fg: 245 239 230;             /* cream #F5EFE6 */
+  --muse-fg-muted: 181 169 152;       /* warm gray #B5A998 */
+  --muse-fg-faint: 124 114 100;       /* dimmer warm gray #7C7264 */
 }
 
 [data-muse-ui][data-theme='light'] {
-  --muse-accent: 61 99 255;
-  --muse-accent-hover: 41 81 235;
-  --muse-surface: 255 255 255;
-  --muse-surface-soft: 248 248 250;
-  --muse-surface-raised: 240 240 244;
-  --muse-line: 24 24 27;
-  --muse-fg: 24 24 27;
-  --muse-fg-muted: 82 82 91;
-  --muse-fg-faint: 113 113 122;
+  --muse-accent: 224 123 79;          /* coral, same as dark */
+  --muse-accent-hover: 198 100 57;    /* darker coral for hover on cream */
+  --muse-surface: 245 239 230;        /* parchment cream #F5EFE6 */
+  --muse-surface-soft: 239 231 216;   /* #EFE7D8 */
+  --muse-surface-raised: 232 222 203; /* #E8DECB */
+  --muse-line: 31 26 18;              /* dark warm ink, used at low alpha */
+  --muse-fg: 31 26 18;                /* dark warm ink #1F1A12 */
+  --muse-fg-muted: 111 102 87;        /* warm gray-brown #6F6657 */
+  --muse-fg-faint: 156 146 127;       /* lighter warm gray #9C927F */
 }
