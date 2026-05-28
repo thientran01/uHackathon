@@ -395,7 +395,12 @@ export function MuseOverlay() {
             historyControls={hasHistory ? historyControls : undefined}
             onClose={requestClose}
           >
-            <ActiveTargetStrip elements={selection} mock={MOCK} onRemove={removeChip} />
+            <ActiveTargetStrip
+              elements={selection}
+              mock={MOCK}
+              onRemove={removeChip}
+              onSwapTarget={() => setActive(true)}
+            />
             {unmappable ? (
               <div className="flex-1 overflow-y-auto px-4 py-3.5">
                 <p className="text-sm leading-relaxed text-amber-300/80">

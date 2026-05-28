@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getElementInfo, getSourceLocation, type ElementInfo } from './sourceLocation'
 import type { SelectedElement } from './types'
 
@@ -35,6 +35,10 @@ export function useSelection() {
   const [hoverInfo, setHoverInfo] = useState<ElementInfo | null>(null)
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const [selection, setSelection] = useState<SelectedElement[]>([])
+  // Snapshot of the selection at the moment select-mode was entered, so Esc
+  // can restore it (mid-conversation "swap target" flow: user re-enters select
+  // mode to pick a different element, then Esc to bail without losing thread).
+  const entrySelectionRef = useRef<SelectedElement[]>([])
 
   const clearSelection = useCallback(() => setSelection([]), [])
 
@@ -45,6 +49,9 @@ export function useSelection() {
       setCursor(null)
       return
     }
+
+    // Capture what we had when entering select mode.
+    entrySelectionRef.current = selection
 
     const onMove = (e: MouseEvent) => {
       setCursor({ x: e.clientX, y: e.clientY })
@@ -86,7 +93,10 @@ export function useSelection() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setActive(false)
-        setSelection([]) // cancel the in-progress batch
+        // Restore the pre-select-mode selection. If we entered with nothing
+        // (the FAB flow), this restores empty. If we entered with a target
+        // already selected (the swap flow), this preserves it.
+        setSelection(entrySelectionRef.current)
       }
     }
 
