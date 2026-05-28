@@ -16,8 +16,8 @@
  * html[data-theme] attribute.
  */
 [data-muse-ui] {
-  --muse-accent: 122 16 24;           /* deep red #7A1018 */
-  --muse-accent-hover: 145 25 35;     /* slightly brighter on dark */
+  --muse-accent: 127 47 47;           /* muted brick red #7F2F2F */
+  --muse-accent-hover: 150 67 67;     /* slightly brighter on dark */
   --muse-surface: 20 18 16;           /* warm near-black #141210 */
   --muse-surface-soft: 28 26 23;      /* #1C1A17 */
   --muse-surface-raised: 38 35 31;    /* #26231F */
@@ -28,8 +28,8 @@
 }
 
 [data-muse-ui][data-theme='light'] {
-  --muse-accent: 122 16 24;           /* deep red, same as dark */
-  --muse-accent-hover: 95 10 18;      /* deeper red for hover on cream */
+  --muse-accent: 127 47 47;           /* muted brick red, same as dark */
+  --muse-accent-hover: 100 36 36;     /* deeper brick for hover on cream */
   --muse-surface: 245 239 230;        /* parchment cream #F5EFE6 */
   --muse-surface-soft: 239 231 216;   /* #EFE7D8 */
   --muse-surface-raised: 232 222 203; /* #E8DECB */
