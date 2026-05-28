@@ -25,11 +25,12 @@
   --muse-fg: 245 239 230;             /* cream #F5EFE6 */
   --muse-fg-muted: 181 169 152;       /* warm gray #B5A998 */
   --muse-fg-faint: 124 114 100;       /* dimmer warm gray #7C7264 */
-  /* Diff tokens — bg uses tint at low alpha, text uses text color at full alpha. */
-  --muse-diff-add-tint: 16 185 129;   /* emerald-500 */
-  --muse-diff-add-text: 110 231 183;  /* emerald-300 — readable on dark */
-  --muse-diff-del-tint: 244 63 94;    /* rose-500 */
-  --muse-diff-del-text: 253 164 175;  /* rose-300 — readable on dark */
+  /* Diff tokens — warm green/red (not cool emerald/rose) to fit the Phantom
+   * palette. bg uses tint at low alpha, text uses the text color at full. */
+  --muse-diff-add-tint: 34 197 94;    /* green-500 — warm yellow-green */
+  --muse-diff-add-text: 134 239 172;  /* green-300 — readable on dark */
+  --muse-diff-del-tint: 239 68 68;    /* red-500 — true warm red */
+  --muse-diff-del-text: 252 165 165;  /* red-300 — readable on dark */
 }
 
 [data-muse-ui][data-theme='light'] {
@@ -42,9 +43,10 @@
   --muse-fg: 31 26 18;                /* dark warm ink #1F1A12 */
   --muse-fg-muted: 111 102 87;        /* warm gray-brown #6F6657 */
   --muse-fg-faint: 156 146 127;       /* lighter warm gray #9C927F */
-  /* Light theme — text must be DARKER than the tint to read on cream. */
-  --muse-diff-add-tint: 4 120 87;     /* emerald-700 */
-  --muse-diff-add-text: 6 78 59;      /* emerald-900 */
-  --muse-diff-del-tint: 159 18 57;    /* rose-700 */
-  --muse-diff-del-text: 109 12 39;    /* rose-900 */
+  /* Light theme — text must be DARKER than the tint to read on cream.
+   * Warm green/red to match the warm palette. */
+  --muse-diff-add-tint: 21 128 61;    /* green-700 — warm deep green */
+  --muse-diff-add-text: 20 83 45;     /* green-900 — dark forest */
+  --muse-diff-del-tint: 185 28 28;    /* red-700 — warm deep red */
+  --muse-diff-del-text: 127 29 29;    /* red-900 — deep blood red */
 }
