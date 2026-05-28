@@ -109,6 +109,23 @@ export const museStore = {
     state = { ...state, thread: [...state.thread, msg] }
     notify()
   },
+  /** Freeze the most recent clarify bubble's answers so its inactive
+   * rendering is decoupled from the (about-to-be-cleared) live answers map. */
+  snapshotLastClarifyAnswers(answers: Record<number, string>) {
+    const idx = (() => {
+      for (let i = state.thread.length - 1; i >= 0; i--) {
+        if (state.thread[i].kind === 'clarify') return i
+      }
+      return -1
+    })()
+    if (idx === -1) return
+    const updated = state.thread.slice()
+    const target = updated[idx]
+    if (target.kind !== 'clarify') return
+    updated[idx] = { ...target, answeredWith: { ...answers } }
+    state = { ...state, thread: updated }
+    notify()
+  },
 }
 
 let _id = 0

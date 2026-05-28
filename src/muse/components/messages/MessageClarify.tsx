@@ -10,6 +10,7 @@ export function MessageClarify({
   loading,
   allAnswered,
   active,
+  answeredWith,
 }: {
   questions: ClarifyingQuestion[]
   answers: Record<number, string>
@@ -20,17 +21,22 @@ export function MessageClarify({
   /** Active = renders interactive option buttons. Inactive (a newer bubble
    *  has taken over) = collapsed read-only summary of what was asked/answered. */
   active: boolean
+  /** Frozen answers snapshot for inactive rendering. The store clears the
+   *  live `answers` map when a new clarify activates, so inactive bubbles
+   *  must use their own snapshot to avoid flashing blank. */
+  answeredWith?: Record<number, string>
 }) {
   const [otherOpen, setOtherOpen] = useState<Record<number, boolean>>({})
 
   if (!active) {
+    const frozen = answeredWith ?? {}
     return (
       <div className="space-y-1.5 text-sm">
         {questions.map((q, qi) => (
           <div key={qi} className="text-fg-muted">
             <span className="text-fg">{q.question}</span>
-            {answers[qi] && (
-              <span className="text-fg-faint"> → {answers[qi]}</span>
+            {frozen[qi] && (
+              <span className="text-fg-faint"> → {frozen[qi]}</span>
             )}
           </div>
         ))}

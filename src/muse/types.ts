@@ -62,7 +62,17 @@ export type ChatMessage =
 // new turn moves past them.
 export type ThreadMessage =
   | { id: string; kind: 'user'; text: string }
-  | { id: string; kind: 'clarify'; toolUseId: string; questions: ClarifyingQuestion[] }
+  | {
+      id: string
+      kind: 'clarify'
+      toolUseId: string
+      questions: ClarifyingQuestion[]
+      // Frozen snapshot of the user's answers, captured the moment this
+      // clarify stops being active (next turn fires). Inactive rendering
+      // reads from here instead of the live store map, which gets cleared
+      // for the next clarify.
+      answeredWith?: Record<number, string>
+    }
   | { id: string; kind: 'option-set'; toolUseId: string; edits: FileEdit[]; rationale: string }
   | { id: string; kind: 'applied'; fileCount: number; rationale: string }
   | { id: string; kind: 'target-handoff'; target: SelectedElement }

@@ -47,17 +47,14 @@ export function MuseOverlay() {
   const { active, setActive, hoverRect, hoverInfo, cursor, selection, setSelection, clearSelection } =
     useSelection()
 
-  // `error` and `applied` are tracked in the store and updated by the action
-  // functions, but the thread shell surfaces them as bubble events
-  // (kind: 'error' and 'applied'), so we don't read them directly here.
   const {
     thread,
     draft,
-    messages,
     pending,
     originals,
     answers,
     loading,
+    error,
     past,
     future,
     historyLoading,
@@ -66,35 +63,43 @@ export function MuseOverlay() {
 
   const [closing, setClosing] = useState(false)
   const closeTimer = useRef<number | null>(null)
-  const prevTargetRef = useRef<SelectedElement | null>(null)
+  const prevKeysRef = useRef<string[]>([])
   const rootRef = useRef<HTMLDivElement>(null)
 
   useHostTheme(rootRef)
 
   // When the SET of selected elements changes:
-  //   - Empty selection → clear conversation entirely.
-  //   - First-ever target this session → no handoff bubble; thread is empty.
-  //   - Different target → append a target-handoff bubble. Keep the rest of
-  //     the thread + messages transcript so the LLM has cross-target memory.
-  //   - Same target (shrinking a batch) → no-op.
+  //   - Empty selection → wipe conversation.
+  //   - First-ever target this session → fresh thread (keep typed draft).
+  //   - Shrink or grow of the same focus (one set is a subset of the other)
+  //     → no handoff, keep the thread. This covers shift-click to add or
+  //     remove batch elements without "switching focus."
+  //   - Truly different selection (some elements swapped) → append handoff.
   const selectionKey = selection.map((s) => s.key).sort().join('|')
   useEffect(() => {
-    const cur: SelectedElement | null = selection[0] ?? null
-    const prev = prevTargetRef.current
-    prevTargetRef.current = cur
+    const curKeys = selection.map((s) => s.key)
+    const prevKeys = prevKeysRef.current
 
-    if (!cur) {
+    if (curKeys.length === 0) {
+      prevKeysRef.current = []
       museStore.resetConversation()
       return
     }
-    if (!prev) {
-      // First target — fresh thread.
+    if (prevKeys.length === 0) {
+      prevKeysRef.current = curKeys
       museStore.resetConversation(true)
       return
     }
-    if (prev.key === cur.key) return
-    // Different target — append handoff, keep history.
-    museStore.appendThread({ id: nextThreadId(), kind: 'target-handoff', target: cur })
+    // Pure shrink (cur ⊆ prev) OR pure grow (prev ⊆ cur) = no handoff.
+    const curInPrev = curKeys.every((k) => prevKeys.includes(k))
+    const prevInCur = prevKeys.every((k) => curKeys.includes(k))
+    prevKeysRef.current = curKeys
+    if (curInPrev || prevInCur) return
+
+    const cur = selection[0]
+    if (cur) {
+      museStore.appendThread({ id: nextThreadId(), kind: 'target-handoff', target: cur })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionKey])
 
@@ -122,7 +127,6 @@ export function MuseOverlay() {
       const resp = await museChat(selection, msgs)
       if (resp.error) {
         museStore.setState({ error: resp.error })
-        museStore.appendThread({ id: nextThreadId(), kind: 'error', text: resp.error })
         return
       }
       const blocks: ContentBlock[] = resp.content ?? []
@@ -131,9 +135,7 @@ export function MuseOverlay() {
 
       const tu = blocks.find((b) => b.type === 'tool_use') as ToolUseBlock | undefined
       if (!tu) {
-        const txt = 'Muse did not return an action. Try rephrasing.'
-        museStore.setState({ error: txt })
-        museStore.appendThread({ id: nextThreadId(), kind: 'error', text: txt })
+        museStore.setState({ error: 'Muse did not return an action. Try rephrasing.' })
         return
       }
       if (tu.name === 'ask_clarifying_questions') {
@@ -150,9 +152,7 @@ export function MuseOverlay() {
           .map((e) => ({ fileName: normPath(e.fileName ?? ''), newContent: e.newContent }))
           .filter((e) => typeof e.newContent === 'string' && allowed.has(e.fileName))
         if (edits.length === 0) {
-          const txt = "Muse didn't return changes for the selected element(s). Try rephrasing."
-          museStore.setState({ error: txt })
-          museStore.appendThread({ id: nextThreadId(), kind: 'error', text: txt })
+          museStore.setState({ error: "Muse didn't return changes for the selected element(s). Try rephrasing." })
           return
         }
         const rationale = input.rationale ?? ''
@@ -162,60 +162,64 @@ export function MuseOverlay() {
         museStore.appendThread({ id: nextThreadId(), kind: 'option-set', toolUseId: tu.id, edits, rationale })
       }
     } catch (e) {
-      const msg = (e as Error).message
-      museStore.setState({ error: msg })
-      museStore.appendThread({ id: nextThreadId(), kind: 'error', text: msg })
+      museStore.setState({ error: (e as Error).message })
     } finally {
       museStore.setState({ loading: false })
     }
   }
 
-  // Send the composer text as the next user message.
+  // Send the composer text as the next user message. Reads from store.getState()
+  // so a rapid double-submit can't see a stale closed-over `pending` / `messages`.
   function sendDraft() {
     const text = draft.trim()
     if (!text) return
+    const s = museStore.getState()
     museStore.setState({ draft: '' })
     museStore.appendThread({ id: nextThreadId(), kind: 'user', text })
-    // Build the next Anthropic-facing message:
-    //   - If there's a pending ask, this becomes the tool_result for it.
-    //   - Otherwise, a plain user text message that extends the conversation.
-    const next: ChatMessage = pending?.kind === 'ask'
-      ? { role: 'user', content: [{ type: 'tool_result', tool_use_id: pending.toolUseId, content: text }] }
+    // If a clarify is currently pending and the user typed in the composer
+    // instead of using the option buttons, freeze whatever partial selections
+    // they had so the now-inactive clarify renders consistently.
+    if (s.pending?.kind === 'ask') museStore.snapshotLastClarifyAnswers(s.answers)
+    const next: ChatMessage = s.pending?.kind === 'ask'
+      ? { role: 'user', content: [{ type: 'tool_result', tool_use_id: s.pending.toolUseId, content: text }] }
       : { role: 'user', content: text }
-    runChat([...messages, next])
+    runChat([...s.messages, next])
   }
 
   function submitAnswers() {
-    if (!pending || pending.kind !== 'ask') return
-    // No user bubble here — the (now inactive) clarify bubble already shows
-    // the questions + chosen answers inline. Adding a user bubble on top
-    // would duplicate the same text.
-    const text = pending.questions
-      .map((q, i) => `${q.question} → ${answers[i] ?? '(no preference)'}`)
+    const s = museStore.getState()
+    if (!s.pending || s.pending.kind !== 'ask') return
+    // Freeze the chosen answers into the clarify bubble before the live
+    // `answers` map gets cleared for the next turn.
+    museStore.snapshotLastClarifyAnswers(s.answers)
+    // No user bubble — the inactive clarify summary covers it.
+    const text = s.pending.questions
+      .map((q, i) => `${q.question} → ${s.answers[i] ?? '(no preference)'}`)
       .join('\n')
     runChat([
-      ...messages,
-      { role: 'user', content: [{ type: 'tool_result', tool_use_id: pending.toolUseId, content: text }] },
+      ...s.messages,
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: s.pending.toolUseId, content: text }] },
     ])
   }
 
   async function approve(edits: FileEdit[]) {
-    if (!pending || pending.kind !== 'propose') return
-    const rationale = pending.rationale
+    const s = museStore.getState()
+    if (!s.pending || s.pending.kind !== 'propose' || s.loading) return
+    const rationale = s.pending.rationale
     museStore.setState({ loading: true, error: null })
     try {
       await museWrite(edits)
       const entry: HistoryEntry = {
         files: edits.map((e) => ({
           fileName: e.fileName,
-          before: originals[e.fileName] ?? '',
+          before: s.originals[e.fileName] ?? '',
           after: e.newContent,
         })),
         elements: selection,
         label: rationale.slice(0, 80),
       }
-      museStore.setState((s) => ({
-        past: [...s.past, entry],
+      museStore.setState((cur) => ({
+        past: [...cur.past, entry],
         future: [],
         applied: true,
         pending: null,
@@ -227,9 +231,7 @@ export function MuseOverlay() {
         rationale: '',
       })
     } catch (e) {
-      const msg = (e as Error).message
-      museStore.setState({ error: msg })
-      museStore.appendThread({ id: nextThreadId(), kind: 'error', text: msg })
+      museStore.setState({ error: (e as Error).message })
     } finally {
       museStore.setState({ loading: false })
     }
@@ -416,6 +418,13 @@ export function MuseOverlay() {
                   allAnswered={allAnswered}
                   onApprove={approve}
                 />
+                {error && (
+                  <div className="px-3 pb-2">
+                    <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300 ring-1 ring-rose-500/20">
+                      {error}
+                    </p>
+                  </div>
+                )}
                 <Composer
                   value={draft}
                   onChange={(v) => museStore.setState({ draft: v })}

@@ -58,6 +58,7 @@ export function MuseThread({
                 loading={loading}
                 allAnswered={allAnswered}
                 active={pending?.kind === 'ask' && pending.toolUseId === m.toolUseId}
+                answeredWith={m.answeredWith}
               />
             )
           case 'option-set':
