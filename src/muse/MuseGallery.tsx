@@ -1,15 +1,19 @@
 import { useState, type ReactNode } from 'react'
-import { ClarifyingQuestions } from './components/ClarifyingQuestions'
-import { IntentForm } from './components/IntentForm'
+import { ActiveTargetStrip } from './components/ActiveTargetStrip'
+import { Composer } from './components/Composer'
 import { MuseFab } from './components/MuseFab'
 import { MusePanel } from './components/MusePanel'
-import { ProposedEdit } from './components/ProposedEdit'
 import {
   HoverHighlight,
   SelectBanner,
   SelectionTray,
 } from './components/SelectionOverlay'
-import { ErrorNote, UnmappableNote } from './components/StatusNote'
+import { MessageApplied } from './components/messages/MessageApplied'
+import { MessageClarify } from './components/messages/MessageClarify'
+import { MessageOptionSet } from './components/messages/MessageOptionSet'
+import { MessageTargetHandoff } from './components/messages/MessageTargetHandoff'
+import { MessageThinking } from './components/messages/MessageThinking'
+import { MessageUser } from './components/messages/MessageUser'
 import { UfoIcon } from './components/UfoIcon'
 import { fxEdits, fxElement, fxOriginals, fxQuestions, fxRationale } from './fixtures'
 import type { SelectedElement } from './types'
@@ -32,6 +36,18 @@ function Cell({ title, children }: { title: string; children: ReactNode }) {
         {children}
       </div>
     </section>
+  )
+}
+
+// Wraps a bubble preview in a slim panel-like container so it reads the way
+// it would in the real overlay. Not the full MusePanel — just chrome.
+function ThreadFrame({ target, children }: { target: SelectedElement; children: ReactNode }) {
+  return (
+    <MusePanel onClose={noop}>
+      <ActiveTargetStrip elements={[target]} mock />
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3.5">{children}</div>
+      <Composer value="" onChange={noop} onSubmit={noop} loading={false} />
+    </MusePanel>
   )
 }
 
@@ -76,85 +92,109 @@ export function MuseGallery() {
           <SelectionTray count={3} onDesign={noop} />
         </Cell>
 
-        <Cell title="Panel — intent">
-          <MusePanel elements={[fxElement]} onClose={noop}>
-            <IntentForm value="" onChange={noop} onSubmit={noop} loading={false} />
-          </MusePanel>
+        <Cell title="Composer — empty">
+          <div className="w-[380px] rounded-2xl bg-surface ring-1 ring-line/10">
+            <Composer value="" onChange={noop} onSubmit={noop} loading={false} />
+          </div>
         </Cell>
-        <Cell title="Panel — thinking">
-          <MusePanel elements={[fxElement]} onClose={noop}>
-            <IntentForm value="make this feel more premium" onChange={noop} onSubmit={noop} loading />
-          </MusePanel>
+        <Cell title="Composer — typing">
+          <div className="w-[380px] rounded-2xl bg-surface ring-1 ring-line/10">
+            <Composer value="make this feel more premium" onChange={noop} onSubmit={noop} loading={false} />
+          </div>
         </Cell>
 
-        <Cell title="Panel — clarifying questions">
-          <MusePanel elements={[fxElement]} onClose={noop}>
-            <ClarifyingQuestions
+        <Cell title="Thread — empty + user message">
+          <ThreadFrame target={fxElement}>
+            <MessageUser text="make this feel more premium" />
+            <MessageThinking />
+          </ThreadFrame>
+        </Cell>
+
+        <Cell title="Thread — clarify (active)">
+          <ThreadFrame target={fxElement}>
+            <MessageUser text="make this feel more premium" />
+            <MessageClarify
               questions={fxQuestions}
               answers={{}}
               onSelect={noop}
               onContinue={noop}
               loading={false}
               allAnswered={false}
+              active
             />
-          </MusePanel>
+          </ThreadFrame>
         </Cell>
-        <Cell title="Panel — questions answered">
-          <MusePanel elements={[fxElement]} onClose={noop}>
-            <ClarifyingQuestions
+
+        <Cell title="Thread — clarify (answered, inactive)">
+          <ThreadFrame target={fxElement}>
+            <MessageUser text="make this feel more premium" />
+            <MessageClarify
               questions={fxQuestions}
               answers={answers}
               onSelect={(qi, label) => setAnswers((a) => ({ ...a, [qi]: label }))}
               onContinue={noop}
               loading={false}
               allAnswered
+              active={false}
             />
-          </MusePanel>
+          </ThreadFrame>
         </Cell>
 
-        <Cell title="Panel — batch (3 elements)">
-          <MusePanel elements={[fxElement, fxElement2, { ...fxElement, key: 'x3', tag: 'p' }]} onClose={noop} onRemove={noop}>
-            <IntentForm value="" onChange={noop} onSubmit={noop} loading={false} />
-          </MusePanel>
-        </Cell>
-
-        <Cell title="Panel — proposed edit (multi-file pager)">
-          <MusePanel elements={[fxElement, fxElement2]} onClose={noop} onRemove={noop}>
-            <ProposedEdit
+        <Cell title="Thread — proposed option (active, multi-file)">
+          <ThreadFrame target={fxElement}>
+            <MessageUser text="make this feel more premium" />
+            <MessageOptionSet
               edits={fxEdits}
               originals={fxOriginals}
               rationale={fxRationale}
-              applied={false}
               loading={false}
               onApprove={noop}
-              onRefine={noop}
+              active
             />
-          </MusePanel>
+          </ThreadFrame>
         </Cell>
-        <Cell title="Panel — applied">
-          <MusePanel elements={[fxElement, fxElement2]} mock onClose={noop} onRemove={noop}>
-            <ProposedEdit
+
+        <Cell title="Thread — applied">
+          <ThreadFrame target={fxElement}>
+            <MessageUser text="make this feel more premium" />
+            <MessageOptionSet
               edits={fxEdits}
               originals={fxOriginals}
               rationale={fxRationale}
-              applied
               loading={false}
               onApprove={noop}
-              onRefine={noop}
+              active={false}
             />
-          </MusePanel>
+            <MessageApplied fileCount={fxEdits.length} rationale="" />
+          </ThreadFrame>
         </Cell>
 
-        <Cell title="Panel — error">
-          <MusePanel elements={[fxElement]} onClose={noop}>
-            <IntentForm value="" onChange={noop} onSubmit={noop} loading={false} />
-            <ErrorNote message="Muse did not return an action. Try rephrasing." />
-          </MusePanel>
+        <Cell title="Thread — target handoff mid-conversation">
+          <ThreadFrame target={fxElement2}>
+            <MessageUser text="punch up the heading" />
+            <MessageTargetHandoff target={fxElement2} />
+            <MessageUser text="now this button — make it pop" />
+            <MessageThinking />
+          </ThreadFrame>
         </Cell>
-        <Cell title="Panel — source not found">
-          <MusePanel elements={[{ ...fxElement, fileName: '' }]} onClose={noop}>
-            <UnmappableNote />
-          </MusePanel>
+
+        <Cell title="Thread — error">
+          <ThreadFrame target={fxElement}>
+            <MessageUser text="..." />
+            <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300 ring-1 ring-rose-500/20">
+              Muse did not return an action. Try rephrasing.
+            </p>
+          </ThreadFrame>
+        </Cell>
+
+        <Cell title="Active target strip — batch">
+          <div className="w-[380px] rounded-2xl bg-surface ring-1 ring-line/10">
+            <ActiveTargetStrip
+              elements={[fxElement, fxElement2, { ...fxElement, key: 'x3', tag: 'p' }]}
+              mock={false}
+              onRemove={noop}
+            />
+          </div>
         </Cell>
       </div>
     </div>

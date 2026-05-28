@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { ChatMessage, ClarifyingQuestion, FileEdit, HistoryEntry } from './types'
+import type { ChatMessage, ClarifyingQuestion, FileEdit, HistoryEntry, ThreadMessage } from './types'
 
 // In-memory only. State resets on full page refresh, or on HMR of THIS file.
 // HMR of other Muse files (components) does not reset state — the store
@@ -11,8 +11,12 @@ export type Pending =
 
 export type MuseState = {
   // Per-conversation slice — reset by resetConversation().
+  // `intent` is kept for any callers that still set it but the thread shell
+  // uses `draft` (composer text) instead. Remove once nothing references it.
   intent: string
+  draft: string
   messages: ChatMessage[]
+  thread: ThreadMessage[]
   pending: Pending | null
   answers: Record<number, string>
   loading: boolean
@@ -32,7 +36,9 @@ export type MuseState = {
 
 const initialState: MuseState = {
   intent: '',
+  draft: '',
   messages: [],
+  thread: [],
   pending: null,
   originals: {},
   answers: {},
@@ -79,24 +85,35 @@ export const museStore = {
     notify()
   },
   /**
-   * Reset the conversation slice (messages, pending, answers, error, applied).
-   * History is preserved. `keepIntent` is for the "shrinking a batch" case
-   * where the user removed an element from a multi-select and we don't want
-   * to wipe their typed intent.
+   * Reset the conversation slice (thread, messages, pending, answers, error,
+   * applied). History is preserved. `keepDraft` is for the "shrinking a batch"
+   * case where the user removed an element from a multi-select and we don't
+   * want to wipe their typed composer text.
    */
-  resetConversation(keepIntent = false) {
+  resetConversation(keepDraft = false) {
     state = {
       ...state,
+      thread: [],
       messages: [],
       pending: null,
       answers: {},
       error: null,
       applied: false,
-      intent: keepIntent ? state.intent : '',
+      intent: '',
+      draft: keepDraft ? state.draft : '',
     }
     notify()
   },
+  /** Append a single bubble to the thread, replacing state immutably. */
+  appendThread(msg: ThreadMessage) {
+    state = { ...state, thread: [...state.thread, msg] }
+    notify()
+  },
 }
+
+let _id = 0
+/** Stable, monotonic id for thread messages — sortable, unique per session. */
+export const nextThreadId = (): string => `m${++_id}`
 
 /** Subscribe a component to the entire store. Re-renders on any state change. */
 export function useMuseStore(): MuseState {

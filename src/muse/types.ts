@@ -50,3 +50,20 @@ export type ChatMessage =
   | { role: 'user'; content: string }
   | { role: 'user'; content: Array<{ type: 'tool_result'; tool_use_id: string; content: string }> }
   | { role: 'assistant'; content: ContentBlock[] }
+
+// --- Thread render model (UI-facing) ---
+// The thread is the timeline of bubbles shown in the panel. It runs parallel
+// to `messages` (the Anthropic-facing transcript): every meaningful event the
+// user should *see* becomes a ThreadMessage, even ones that don't appear in
+// the transcript (target handoffs, applied confirmations, errors).
+//
+// Bubbles are append-only history; the most recent `clarify` / `option-set`
+// is the "active" one (renders its action UI) — older ones freeze when a
+// new turn moves past them.
+export type ThreadMessage =
+  | { id: string; kind: 'user'; text: string }
+  | { id: string; kind: 'clarify'; toolUseId: string; questions: ClarifyingQuestion[] }
+  | { id: string; kind: 'option-set'; toolUseId: string; edits: FileEdit[]; rationale: string }
+  | { id: string; kind: 'applied'; fileCount: number; rationale: string }
+  | { id: string; kind: 'target-handoff'; target: SelectedElement }
+  | { id: string; kind: 'error'; text: string }
