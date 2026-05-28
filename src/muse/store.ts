@@ -14,11 +14,15 @@ export type MuseState = {
   intent: string
   messages: ChatMessage[]
   pending: Pending | null
-  originals: Record<string, string>
   answers: Record<number, string>
   loading: boolean
   error: string | null
   applied: boolean
+  // Per-chat-turn slice — overwritten by runChat on each response. NOT reset
+  // by resetConversation; runChat will replace it on the next call. Stale
+  // originals are harmless because they're keyed by file path and only read
+  // alongside a matching `pending` from the same response.
+  originals: Record<string, string>
   // Cross-conversation slice — persists across selections.
   past: HistoryEntry[]
   future: HistoryEntry[]
@@ -56,9 +60,21 @@ export const museStore = {
       subscribers.delete(fn)
     }
   },
-  /** Merge a partial state patch and notify. */
+  /** Merge a partial state patch and notify. Skips no-op patches (every
+   * key in the patch already equals the current value) to avoid spurious
+   * re-renders — useSyncExternalStore compares snapshot reference identity. */
   setState(patch: Partial<MuseState> | ((s: MuseState) => Partial<MuseState>)) {
     const next = typeof patch === 'function' ? patch(state) : patch
+    if (!next) return
+    const cur = state as Record<string, unknown>
+    let changed = false
+    for (const key in next) {
+      if ((next as Record<string, unknown>)[key] !== cur[key]) {
+        changed = true
+        break
+      }
+    }
+    if (!changed) return
     state = { ...state, ...next }
     notify()
   },

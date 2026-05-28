@@ -19,8 +19,11 @@ export function useHostTheme(rootRef: React.RefObject<HTMLElement>) {
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
 
     const compute = (): 'light' | 'dark' => {
-      if (document.documentElement.classList.contains('dark')) return 'dark'
-      if (document.documentElement.classList.contains('light')) return 'light'
+      const html = document.documentElement
+      if (html.classList.contains('dark')) return 'dark'
+      if (html.classList.contains('light')) return 'light'
+      const dt = html.getAttribute('data-theme')
+      if (dt === 'dark' || dt === 'light') return dt
       return mql.matches ? 'dark' : 'light'
     }
 
