@@ -29,10 +29,10 @@
    * primaries — those still felt cartoonish against the Phantom palette).
    * Distinct from the burgundy accent (#7F2F2F) so a del-line is never
    * confused with the brand color. */
-  --muse-diff-add-tint: 141 173 86;   /* warm olive-green */
-  --muse-diff-add-text: 200 222 152;  /* lighter olive — readable on warm dark */
-  --muse-diff-del-tint: 204 110 78;   /* warm terracotta */
-  --muse-diff-del-text: 240 180 150;  /* lighter terracotta — readable on warm dark */
+  --muse-diff-add-tint: 74 145 96;    /* clean forest green — less yellow, no cyan */
+  --muse-diff-add-text: 155 215 175;  /* lighter forest — readable on warm dark */
+  --muse-diff-del-tint: 185 75 85;    /* clean cherry red — not pink, not terracotta */
+  --muse-diff-del-text: 230 165 170;  /* lighter cherry — readable on warm dark */
 }
 
 [data-muse-ui][data-theme='light'] {
@@ -47,8 +47,8 @@
   --muse-fg-faint: 156 146 127;       /* lighter warm gray #9C927F */
   /* Light theme — deeper warm muted values readable on cream. Olive-green
    * for add, deep terracotta for del. Both distinct from the burgundy accent. */
-  --muse-diff-add-tint: 92 122 50;    /* deep warm olive */
-  --muse-diff-add-text: 50 75 22;     /* very deep olive — readable on cream */
-  --muse-diff-del-tint: 170 75 40;    /* deep terracotta — orange-leaning, not pink */
-  --muse-diff-del-text: 100 38 18;    /* deep burnt sienna — readable on cream */
+  --muse-diff-add-tint: 40 110 60;    /* deep clean forest green */
+  --muse-diff-add-text: 18 60 30;     /* very deep forest — readable on cream */
+  --muse-diff-del-tint: 175 40 55;    /* deep clean cherry — distinct from burgundy accent */
+  --muse-diff-del-text: 95 18 30;     /* very deep cherry — readable on cream */
 }
