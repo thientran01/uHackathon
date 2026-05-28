@@ -26,7 +26,7 @@ export function ClarifyingQuestions({
         const isOther = !!otherOpen[qi]
         return (
           <div key={qi} className="space-y-2">
-            <p className="text-sm font-medium text-zinc-200">{q.question}</p>
+            <p className="text-sm font-medium text-fg">{q.question}</p>
             <div className="space-y-2">
               {q.options.map((opt) => {
                 const chosen = !isOther && answers[qi] === opt.label
@@ -41,11 +41,11 @@ export function ClarifyingQuestions({
                     className={`w-full rounded-xl border p-3 text-left transition active:scale-[0.99] ${
                       chosen
                         ? 'border-accent bg-accent/15 ring-1 ring-accent'
-                        : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]'
+                        : 'border-line/10 bg-line/[0.03] hover:border-line/20 hover:bg-line/[0.06]'
                     }`}
                   >
-                    <div className="text-sm font-medium text-zinc-100">{opt.label}</div>
-                    <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">{opt.description}</div>
+                    <div className="text-sm font-medium text-fg">{opt.label}</div>
+                    <div className="mt-0.5 text-xs leading-relaxed text-fg-faint">{opt.description}</div>
                   </button>
                 )
               })}
@@ -62,12 +62,12 @@ export function ClarifyingQuestions({
                 className={`w-full rounded-xl border p-3 text-left transition active:scale-[0.99] ${
                   isOther
                     ? 'border-accent bg-accent/15 ring-1 ring-accent'
-                    : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]'
+                    : 'border-line/10 bg-line/[0.03] hover:border-line/20 hover:bg-line/[0.06]'
                 }`}
               >
-                <div className="text-sm font-medium text-zinc-100">Something else…</div>
+                <div className="text-sm font-medium text-fg">Something else…</div>
                 {!isOther && (
-                  <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">
+                  <div className="mt-0.5 text-xs leading-relaxed text-fg-faint">
                     Describe the change in your own words.
                   </div>
                 )}
@@ -83,7 +83,7 @@ export function ClarifyingQuestions({
                     if (e.key === 'Enter' && allAnswered && !loading) onContinue()
                   }}
                   placeholder="e.g. give it a retro arcade feel"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-accent focus:ring-2 focus:ring-accent/25"
+                  className="w-full rounded-xl border border-line/10 bg-line/[0.04] p-3 text-sm text-fg outline-none transition placeholder:text-fg-faint focus:border-accent focus:ring-2 focus:ring-accent/25"
                 />
               )}
             </div>

@@ -10,7 +10,7 @@ export function UnmappableNote() {
   return (
     <p className="text-sm leading-relaxed text-amber-300/80">
       Couldn't map this element to a source file. Try clicking page content — it works best
-      inside <code className="rounded bg-white/10 px-1 text-amber-200">src/demo/</code>.
+      inside <code className="rounded bg-line/10 px-1 text-amber-200">src/demo/</code>.
     </p>
   )
 }

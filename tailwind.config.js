@@ -16,10 +16,25 @@ export default {
           'sans-serif',
         ],
       },
+      // Muse design system — semantic tokens backed by CSS variables that
+      // flip per theme. Light/dark values are defined in src/muse/muse.css
+      // and toggled by useHostTheme() writing data-theme on [data-muse-ui].
       colors: {
-        // Muse design system — near-black surfaces + one cobalt accent.
-        accent: { DEFAULT: '#3d63ff', hover: '#5577ff' },
-        ink: { DEFAULT: '#101013', soft: '#17171b' },
+        accent: {
+          DEFAULT: 'rgb(var(--muse-accent) / <alpha-value>)',
+          hover: 'rgb(var(--muse-accent-hover) / <alpha-value>)',
+        },
+        surface: {
+          DEFAULT: 'rgb(var(--muse-surface) / <alpha-value>)',
+          soft: 'rgb(var(--muse-surface-soft) / <alpha-value>)',
+          raised: 'rgb(var(--muse-surface-raised) / <alpha-value>)',
+        },
+        line: 'rgb(var(--muse-line) / <alpha-value>)',
+        fg: {
+          DEFAULT: 'rgb(var(--muse-fg) / <alpha-value>)',
+          muted: 'rgb(var(--muse-fg-muted) / <alpha-value>)',
+          faint: 'rgb(var(--muse-fg-faint) / <alpha-value>)',
+        },
       },
       // Muse motion — applied per Emil Kowalski's principles:
       // ease-out for entrances, custom curve, under 300ms, start scale > 0.
