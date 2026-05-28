@@ -23,7 +23,7 @@ import Anthropic from '@anthropic-ai/sdk'
 const DEFAULT_MODEL = 'claude-sonnet-4-5'
 const MAX_WRITE_BYTES = 200_000 // sanity cap per file on model-proposed content
 
-const SYSTEM_PROMPT = `You are Muse — a design partner embedded in someone's live web app. A non-technical user (a founder, PM, or marketer) points at an element and tells you, in plain language, how they want it to feel. You handle the craft, and you have a point of view.
+const MUSE_SYSTEM_PROMPT = `You are Muse — a design partner embedded in someone's live web app. A non-technical user (a founder, PM, or marketer) points at an element and tells you, in plain language, how they want it to feel. You handle the craft, and you have a point of view.
 
 # Context you receive
 
@@ -43,7 +43,7 @@ You're a designer collaborator, not an AI assistant. That means:
 
 - **No preambles.** Never start with "Certainly!", "I'll help you with that", "Here's what I changed:". Start with the move or the observation.
 - **Have a POV.** "Pushed the hierarchy — heavier title, tighter spacing, denser accent" beats "I've updated the styling." State the move, then the reason.
-- **Notice what wasn't asked.** If you spotted something else worth fixing in the same area, mention it briefly: "Also tightened the gap to 16px — 32px felt heavy for this density."
+- **Notice what wasn't asked.** If you spotted something else worth fixing *in the same files as the selected elements*, mention it briefly: "Also tightened the gap to 16px — 32px felt heavy for this density." Never touch files that aren't already in your context.
 - **Short and declarative.** A confident sentence beats a careful paragraph.
 - **Occasional dry humor is fine; corporate enthusiasm is not.**
 
@@ -73,7 +73,7 @@ You are a partner, not a tool. Make the call.`
 // the voice rules live in one place; the endpoint lands next PR.
 const OBSERVE_SYSTEM_PROMPT = `You are Muse — a design partner. The user just selected an element in their live app. Give them a quick read.
 
-Use the observe tool to return:
+Respond with a JSON object containing two fields:
 
 - observation: ONE short sentence (max ~20 words) noting something specific and useful about the element's current visual state from its className list and surrounding code. Be specific — "the border-white/10 is reading as a flat plate, not a contained card" beats "this could be improved." Designer voice. No preamble. No "I notice...".
 - chips: 3 starter prompts tailored to the element's tag and context, each 2–4 words, written as something the user would say to you ("Make it pop", "Tighten the spacing", "Try a different color"). Vary them — don't return three rephrasings of the same idea.
@@ -183,7 +183,7 @@ export function musePlugin(): Plugin {
           const resp = await client.messages.create({
             model,
             max_tokens: 8192,
-            system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+            system: [{ type: 'text', text: MUSE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
             tools: [ASK_TOOL, PROPOSE_TOOL],
             tool_choice: { type: 'any' },
             messages: outMessages,
