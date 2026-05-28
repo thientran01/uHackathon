@@ -71,7 +71,7 @@ export function ActiveTargetStrip({
           onClick={onSwapTarget}
           aria-label="Pick a different element"
           title="Pick a different element (Esc to cancel)"
-          className="shrink-0 rounded-md p-1 text-fg-faint transition hover:bg-line/5 hover:text-fg"
+          className="shrink-0 rounded-md p-1 text-accent transition hover:bg-accent/10"
         >
           <Crosshair size={13} weight="bold" />
         </button>
