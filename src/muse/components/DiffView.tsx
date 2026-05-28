@@ -9,9 +9,9 @@ export function DiffView({ original, newContent }: { original: string; newConten
           key={i}
           className={
             l.type === 'add'
-              ? '-mx-3 bg-emerald-500/10 px-3 text-emerald-300/90'
+              ? '-mx-3 bg-diff-add/15 px-3 text-diff-add-text'
               : l.type === 'del'
-                ? '-mx-3 bg-rose-500/10 px-3 text-rose-300/90'
+                ? '-mx-3 bg-diff-del/15 px-3 text-diff-del-text'
                 : 'text-fg-faint'
           }
         >
