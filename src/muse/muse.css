@@ -25,12 +25,14 @@
   --muse-fg: 245 239 230;             /* cream #F5EFE6 */
   --muse-fg-muted: 181 169 152;       /* warm gray #B5A998 */
   --muse-fg-faint: 124 114 100;       /* dimmer warm gray #7C7264 */
-  /* Diff tokens — warm green/red (not cool emerald/rose) to fit the Phantom
-   * palette. bg uses tint at low alpha, text uses the text color at full. */
-  --muse-diff-add-tint: 34 197 94;    /* green-500 — warm yellow-green */
-  --muse-diff-add-text: 134 239 172;  /* green-300 — readable on dark */
-  --muse-diff-del-tint: 239 68 68;    /* red-500 — true warm red */
-  --muse-diff-del-text: 252 165 165;  /* red-300 — readable on dark */
+  /* Diff tokens — custom warm muted greens and terracotta-reds (no Tailwind
+   * primaries — those still felt cartoonish against the Phantom palette).
+   * Distinct from the burgundy accent (#7F2F2F) so a del-line is never
+   * confused with the brand color. */
+  --muse-diff-add-tint: 141 173 86;   /* warm olive-green */
+  --muse-diff-add-text: 200 222 152;  /* lighter olive — readable on warm dark */
+  --muse-diff-del-tint: 204 110 78;   /* warm terracotta */
+  --muse-diff-del-text: 240 180 150;  /* lighter terracotta — readable on warm dark */
 }
 
 [data-muse-ui][data-theme='light'] {
@@ -43,10 +45,10 @@
   --muse-fg: 31 26 18;                /* dark warm ink #1F1A12 */
   --muse-fg-muted: 111 102 87;        /* warm gray-brown #6F6657 */
   --muse-fg-faint: 156 146 127;       /* lighter warm gray #9C927F */
-  /* Light theme — text must be DARKER than the tint to read on cream.
-   * Warm green/red to match the warm palette. */
-  --muse-diff-add-tint: 21 128 61;    /* green-700 — warm deep green */
-  --muse-diff-add-text: 20 83 45;     /* green-900 — dark forest */
-  --muse-diff-del-tint: 185 28 28;    /* red-700 — warm deep red */
-  --muse-diff-del-text: 127 29 29;    /* red-900 — deep blood red */
+  /* Light theme — deeper warm muted values readable on cream. Olive-green
+   * for add, deep terracotta for del. Both distinct from the burgundy accent. */
+  --muse-diff-add-tint: 92 122 50;    /* deep warm olive */
+  --muse-diff-add-text: 50 75 22;     /* very deep olive — readable on cream */
+  --muse-diff-del-tint: 170 75 40;    /* deep terracotta — orange-leaning, not pink */
+  --muse-diff-del-text: 100 38 18;    /* deep burnt sienna — readable on cream */
 }
