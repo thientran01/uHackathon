@@ -6,9 +6,9 @@ import type { Rect } from '../useSelection'
 
 export function SelectBanner() {
   return (
-    <div className="pointer-events-none rounded-full bg-ink/95 px-4 py-2 text-sm font-medium text-zinc-200 shadow-lg ring-1 ring-white/10 backdrop-blur">
+    <div className="pointer-events-none rounded-full bg-surface/95 px-4 py-2 text-sm font-medium text-fg shadow-lg ring-1 ring-line/10 backdrop-blur">
       Click to select{' '}
-      <span className="text-zinc-500">· ⇧ Shift-click to add several · Esc to cancel</span>
+      <span className="text-fg-faint">· ⇧ Shift-click to add several · Esc to cancel</span>
     </div>
   )
 }
@@ -41,15 +41,15 @@ export function HoverHighlight({
       />
       {info && cursor && (
         <div
-          className="pointer-events-none absolute z-10 max-w-[260px] rounded-md bg-ink/95 px-2 py-1 font-mono text-[10.5px] leading-snug shadow-lg ring-1 ring-white/10 backdrop-blur"
+          className="pointer-events-none absolute z-10 max-w-[260px] rounded-md bg-surface/95 px-2 py-1 font-mono text-[10.5px] leading-snug shadow-lg ring-1 ring-line/10 backdrop-blur"
           style={{ top: tipTop, left: tipLeft }}
         >
           {info.crumbs.length > 0 && (
-            <div className="text-zinc-500">{info.crumbs.map((c) => `<${c}>`).join(' ')}</div>
+            <div className="text-fg-faint">{info.crumbs.map((c) => `<${c}>`).join(' ')}</div>
           )}
-          <div className="truncate text-zinc-100">
+          <div className="truncate text-fg">
             {info.tag}
-            {info.text && <span className="text-zinc-500"> "{info.text}"</span>}
+            {info.text && <span className="text-fg-faint"> "{info.text}"</span>}
           </div>
         </div>
       )}
@@ -89,7 +89,7 @@ export function SelectionMarkers({ elements }: { elements: SelectedElement[] }) 
               style={{ top: r.top, left: r.left, width: r.width, height: r.height }}
             />
             <div
-              className="absolute flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white shadow-md ring-2 ring-ink"
+              className="absolute flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white shadow-md ring-2 ring-surface"
               style={{ top: r.top - 9, left: r.left - 9 }}
             >
               {i + 1}
@@ -104,8 +104,8 @@ export function SelectionMarkers({ elements }: { elements: SelectedElement[] }) 
 // Floating tray shown while building a batch — commit with the button or Enter.
 export function SelectionTray({ count, onDesign }: { count: number; onDesign: () => void }) {
   return (
-    <div className="pointer-events-auto flex items-center gap-3 rounded-full bg-ink/95 py-2 pl-4 pr-2 text-sm shadow-xl ring-1 ring-white/10 backdrop-blur">
-      <span className="text-zinc-300">
+    <div className="pointer-events-auto flex items-center gap-3 rounded-full bg-surface/95 py-2 pl-4 pr-2 text-sm shadow-xl ring-1 ring-line/10 backdrop-blur">
+      <span className="text-fg">
         {count} element{count === 1 ? '' : 's'} selected
       </span>
       <button

@@ -36,18 +36,19 @@ export function MusePanel({
   const single = elements.length === 1 ? elements[0] : null
 
   return (
-    // Near-black tool surface. Grows out of the bottom-right (the FAB); reverses on close.
+    // Tool surface — themed via CSS vars on [data-muse-ui][data-theme=*].
+    // Grows out of the bottom-right (the FAB); reverses on close.
     <div
-      className={`pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right flex-col overflow-hidden rounded-2xl bg-ink/95 text-zinc-100 shadow-2xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl motion-reduce:animate-none ${
+      className={`pointer-events-auto flex max-h-[80vh] w-[380px] origin-bottom-right flex-col overflow-hidden rounded-2xl bg-surface/95 text-fg shadow-2xl shadow-black/40 ring-1 ring-line/10 backdrop-blur-xl motion-reduce:animate-none ${
         closing ? 'animate-muse-panel-out' : 'animate-muse-panel'
       }`}
     >
       <header className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-zinc-100">
+        <div className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-fg">
           <UfoIcon size={16} loading={loading} className="text-accent" />
           {loading ? <ThinkingText /> : 'Muse'}
           {mock && (
-            <span className="ml-1 rounded border border-white/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            <span className="ml-1 rounded border border-line/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fg-faint">
               mock
             </span>
           )}
@@ -74,13 +75,13 @@ export function MusePanel({
                 icon={<ArrowCounterClockwise size={15} />}
                 danger
               />
-              <div className="mx-1 h-3.5 w-px bg-white/10" />
+              <div className="mx-1 h-3.5 w-px bg-line/10" />
             </>
           )}
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md p-1 text-zinc-500 transition hover:bg-white/5 hover:text-zinc-200"
+            className="rounded-md p-1 text-fg-faint transition hover:bg-line/5 hover:text-fg"
           >
             <X size={15} />
           </button>
@@ -88,10 +89,10 @@ export function MusePanel({
       </header>
 
       {/* Target(s) */}
-      <div className="border-y border-white/[0.07] bg-white/[0.02] px-4 py-2 text-xs text-zinc-500">
+      <div className="border-y border-line/[0.07] bg-line/[0.02] px-4 py-2 text-xs text-fg-faint">
         {single ? (
           <div className="flex items-center gap-2">
-            <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-zinc-300 ring-1 ring-white/10">
+            <span className="rounded bg-line/5 px-1.5 py-0.5 font-mono text-fg ring-1 ring-line/10">
               &lt;{single.tag}&gt;
             </span>
             {fileOf(single) ? (
@@ -104,20 +105,20 @@ export function MusePanel({
           </div>
         ) : (
           <div className="space-y-1.5">
-            <div className="font-medium text-zinc-400">Editing {elements.length} elements</div>
+            <div className="font-medium text-fg-muted">Editing {elements.length} elements</div>
             <div className="flex flex-wrap gap-1.5">
               {elements.map((el) => (
                 <span
                   key={el.key}
                   title={`${fileOf(el)}:${el.line}`}
-                  className="inline-flex items-center gap-1 rounded bg-white/5 px-1.5 py-0.5 font-mono text-zinc-300 ring-1 ring-white/10"
+                  className="inline-flex items-center gap-1 rounded bg-line/5 px-1.5 py-0.5 font-mono text-fg ring-1 ring-line/10"
                 >
                   &lt;{el.tag}&gt;
                   {onRemove && (
                     <button
                       onClick={() => onRemove(el.key)}
                       aria-label={`Remove ${el.tag}`}
-                      className="inline-flex text-zinc-500 transition hover:text-zinc-200"
+                      className="inline-flex text-fg-faint transition hover:text-fg"
                     >
                       <X size={11} />
                     </button>
@@ -161,7 +162,7 @@ function HeaderIconBtn({
       className={`rounded-md p-1.5 transition disabled:cursor-not-allowed disabled:opacity-30 ${
         danger
           ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
-          : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-200'
+          : 'text-fg-faint hover:bg-line/5 hover:text-fg'
       }`}
     >
       {icon}

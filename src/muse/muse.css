@@ -1,0 +1,34 @@
+/* Muse semantic theme tokens. Backed by Tailwind's color config (which expects
+ * `rgb(var(--muse-foo) / <alpha-value>)`) — values here are space-separated RGB
+ * triplets so the Tailwind alpha syntax works.
+ *
+ * The defaults are dark; `[data-theme=light]` overrides flip to light.
+ * useHostTheme() sets the data-theme attribute on the [data-muse-ui] root
+ * based on the host app's prefers-color-scheme + `html.dark` class.
+ *
+ * `accent` stays the same across themes — brand consistency. `accent-hover`
+ * shifts slightly darker on light so it reads on a white surface.
+ */
+[data-muse-ui] {
+  --muse-accent: 61 99 255;
+  --muse-accent-hover: 85 119 255;
+  --muse-surface: 16 16 19;
+  --muse-surface-soft: 23 23 27;
+  --muse-surface-raised: 31 31 36;
+  --muse-line: 255 255 255;
+  --muse-fg: 244 244 245;
+  --muse-fg-muted: 161 161 170;
+  --muse-fg-faint: 113 113 122;
+}
+
+[data-muse-ui][data-theme='light'] {
+  --muse-accent: 61 99 255;
+  --muse-accent-hover: 41 81 235;
+  --muse-surface: 255 255 255;
+  --muse-surface-soft: 248 248 250;
+  --muse-surface-raised: 240 240 244;
+  --muse-line: 24 24 27;
+  --muse-fg: 24 24 27;
+  --muse-fg-muted: 82 82 91;
+  --muse-fg-faint: 113 113 122;
+}

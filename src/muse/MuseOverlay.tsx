@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import './muse.css'
 import { museChat, museWrite } from './api'
 import { MOCK } from './config'
 import { useSelection } from './useSelection'
+import { useHostTheme } from './hooks/useHostTheme'
+import { museStore, useMuseStore } from './store'
 import { ClarifyingQuestions } from './components/ClarifyingQuestions'
 import { IntentForm } from './components/IntentForm'
 import { MuseFab } from './components/MuseFab'
@@ -19,17 +22,11 @@ import { ErrorNote, UnmappableNote } from './components/StatusNote'
 import type {
   AskInput,
   ChatMessage,
-  ClarifyingQuestion,
   ContentBlock,
-  FileEdit,
   HistoryEntry,
   ProposeInput,
   ToolUseBlock,
 } from './types'
-
-type Pending =
-  | { kind: 'ask'; toolUseId: string; questions: ClarifyingQuestion[] }
-  | { kind: 'propose'; toolUseId: string; edits: FileEdit[]; rationale: string }
 
 const EXIT_MS = 170 // keep in sync with the muse-panel-out animation
 
@@ -49,24 +46,28 @@ export function MuseOverlay() {
   const { active, setActive, hoverRect, hoverInfo, cursor, selection, setSelection, clearSelection } =
     useSelection()
 
-  // Conversation state — reset when the selection changes.
-  const [intent, setIntent] = useState('')
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [pending, setPending] = useState<Pending | null>(null)
-  const [originals, setOriginals] = useState<Record<string, string>>({})
-  const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [applied, setApplied] = useState(false)
+  // Domain state lives in museStore; component-lifecycle state stays local.
+  const {
+    intent,
+    messages,
+    pending,
+    originals,
+    answers,
+    loading,
+    error,
+    applied,
+    past,
+    future,
+    historyLoading,
+    showRevertConfirm,
+  } = useMuseStore()
+
   const [closing, setClosing] = useState(false)
   const closeTimer = useRef<number | null>(null)
   const prevKeysRef = useRef<string[]>([])
+  const rootRef = useRef<HTMLDivElement>(null)
 
-  // History state — persists across selections (each entry is a multi-file batch).
-  const [past, setPast] = useState<HistoryEntry[]>([])
-  const [future, setFuture] = useState<HistoryEntry[]>([])
-  const [historyLoading, setHistoryLoading] = useState(false)
-  const [showRevertConfirm, setShowRevertConfirm] = useState(false)
+  useHostTheme(rootRef)
 
   // Reset the conversation when the SET of selected elements changes. Keep the
   // typed intent when the user is only *removing* an element from the batch, so
@@ -77,12 +78,7 @@ export function MuseOverlay() {
     const prev = prevKeysRef.current
     const shrunk = keys.length < prev.length && keys.every((k) => prev.includes(k))
     prevKeysRef.current = keys
-    setMessages([])
-    setPending(null)
-    setAnswers({})
-    setError(null)
-    setApplied(false)
-    if (!shrunk) setIntent('')
+    museStore.resetConversation(shrunk)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectionKey])
 
@@ -96,12 +92,7 @@ export function MuseOverlay() {
   }
 
   function refineAgain() {
-    setMessages([])
-    setPending(null)
-    setAnswers({})
-    setError(null)
-    setApplied(false)
-    setIntent('')
+    museStore.resetConversation()
   }
 
   function removeChip(key: string) {
@@ -114,26 +105,27 @@ export function MuseOverlay() {
 
   async function runChat(msgs: ChatMessage[]) {
     if (selection.length === 0) return
-    setLoading(true)
-    setError(null)
+    museStore.setState({ loading: true, error: null })
     try {
       const resp = await museChat(selection, msgs)
       if (resp.error) {
-        setError(resp.error)
+        museStore.setState({ error: resp.error })
         return
       }
       const blocks: ContentBlock[] = resp.content ?? []
-      if (resp.originals) setOriginals(resp.originals)
-      setMessages([...msgs, { role: 'assistant', content: blocks }])
+      if (resp.originals) museStore.setState({ originals: resp.originals })
+      museStore.setState({ messages: [...msgs, { role: 'assistant', content: blocks }] })
 
       const tu = blocks.find((b) => b.type === 'tool_use') as ToolUseBlock | undefined
       if (!tu) {
-        setError('Muse did not return an action. Try rephrasing.')
+        museStore.setState({ error: 'Muse did not return an action. Try rephrasing.' })
         return
       }
       if (tu.name === 'ask_clarifying_questions') {
-        setAnswers({})
-        setPending({ kind: 'ask', toolUseId: tu.id, questions: (tu.input as AskInput).questions })
+        museStore.setState({
+          answers: {},
+          pending: { kind: 'ask', toolUseId: tu.id, questions: (tu.input as AskInput).questions },
+        })
       } else {
         const input = tu.input as ProposeInput
         // Bound writes to the files Muse actually read this turn (the selected
@@ -143,15 +135,17 @@ export function MuseOverlay() {
           .map((e) => ({ fileName: normPath(e.fileName ?? ''), newContent: e.newContent }))
           .filter((e) => typeof e.newContent === 'string' && allowed.has(e.fileName))
         if (edits.length === 0) {
-          setError("Muse didn't return changes for the selected element(s). Try rephrasing.")
+          museStore.setState({ error: "Muse didn't return changes for the selected element(s). Try rephrasing." })
           return
         }
-        setPending({ kind: 'propose', toolUseId: tu.id, edits, rationale: input.rationale ?? '' })
+        museStore.setState({
+          pending: { kind: 'propose', toolUseId: tu.id, edits, rationale: input.rationale ?? '' },
+        })
       }
     } catch (e) {
-      setError((e as Error).message)
+      museStore.setState({ error: (e as Error).message })
     } finally {
-      setLoading(false)
+      museStore.setState({ loading: false })
     }
   }
 
@@ -173,8 +167,7 @@ export function MuseOverlay() {
 
   async function approve() {
     if (!pending || pending.kind !== 'propose') return
-    setLoading(true)
-    setError(null)
+    museStore.setState({ loading: true, error: null })
     try {
       await museWrite(pending.edits)
       // Record the whole batch as one history entry (before/after per file).
@@ -188,56 +181,55 @@ export function MuseOverlay() {
         elements: selection,
         label: pending.rationale.slice(0, 80),
       }
-      setPast((p) => [...p, entry])
-      setFuture([])
-      setApplied(true)
+      museStore.setState((s) => ({ past: [...s.past, entry], future: [], applied: true }))
     } catch (e) {
-      setError((e as Error).message)
+      museStore.setState({ error: (e as Error).message })
     } finally {
-      setLoading(false)
+      museStore.setState({ loading: false })
     }
   }
 
   async function undo() {
     if (past.length === 0) return
     const entry = past[past.length - 1]
-    setHistoryLoading(true)
-    setError(null)
+    museStore.setState({ historyLoading: true, error: null })
     try {
       await museWrite(entry.files.map((f) => ({ fileName: f.fileName, newContent: f.before })))
-      setPast((p) => p.slice(0, -1))
-      setFuture((f) => [entry, ...f])
-      setApplied(false)
+      museStore.setState((s) => ({
+        past: s.past.slice(0, -1),
+        future: [entry, ...s.future],
+        applied: false,
+      }))
       setSelection(entry.elements)
     } catch (e) {
-      setError((e as Error).message)
+      museStore.setState({ error: (e as Error).message })
     } finally {
-      setHistoryLoading(false)
+      museStore.setState({ historyLoading: false })
     }
   }
 
   async function redo() {
     if (future.length === 0) return
     const entry = future[0]
-    setHistoryLoading(true)
-    setError(null)
+    museStore.setState({ historyLoading: true, error: null })
     try {
       await museWrite(entry.files.map((f) => ({ fileName: f.fileName, newContent: f.after })))
-      setFuture((f) => f.slice(1))
-      setPast((p) => [...p, entry])
-      setApplied(true)
+      museStore.setState((s) => ({
+        future: s.future.slice(1),
+        past: [...s.past, entry],
+        applied: true,
+      }))
       setSelection(entry.elements)
     } catch (e) {
-      setError((e as Error).message)
+      museStore.setState({ error: (e as Error).message })
     } finally {
-      setHistoryLoading(false)
+      museStore.setState({ historyLoading: false })
     }
   }
 
   async function revertToOriginal() {
     if (past.length === 0) return
-    setHistoryLoading(true)
-    setError(null)
+    museStore.setState({ historyLoading: true, error: null })
     try {
       // Earliest (pre-Muse) content for every file touched this session.
       const earliest = new Map<string, string>()
@@ -245,15 +237,11 @@ export function MuseOverlay() {
         for (const f of entry.files) if (!earliest.has(f.fileName)) earliest.set(f.fileName, f.before)
       }
       await museWrite([...earliest].map(([fileName, before]) => ({ fileName, newContent: before })))
-      setPast([])
-      setFuture([])
-      setApplied(false)
-      setShowRevertConfirm(false)
+      museStore.setState({ past: [], future: [], applied: false, showRevertConfirm: false })
     } catch (e) {
-      setError((e as Error).message)
-      setShowRevertConfirm(false)
+      museStore.setState({ error: (e as Error).message, showRevertConfirm: false })
     } finally {
-      setHistoryLoading(false)
+      museStore.setState({ historyLoading: false })
     }
   }
 
@@ -263,7 +251,7 @@ export function MuseOverlay() {
     loading: historyLoading,
     onUndo: undo,
     onRedo: redo,
-    onRevert: () => setShowRevertConfirm(true),
+    onRevert: () => museStore.setState({ showRevertConfirm: true }),
   }
   const hasHistory = past.length > 0 || future.length > 0
 
@@ -327,7 +315,7 @@ export function MuseOverlay() {
   }, [active, selection, closing, pending, allAnswered, applied, loading])
 
   return (
-    <div data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
+    <div ref={rootRef} data-muse-ui className="pointer-events-none fixed inset-0 z-[999999] font-sans">
       {active && hoverRect && <HoverHighlight rect={hoverRect} cursor={cursor} info={hoverInfo} />}
       {showMarkers && <SelectionMarkers elements={selection} />}
 
@@ -374,12 +362,19 @@ export function MuseOverlay() {
             {unmappable ? (
               <UnmappableNote />
             ) : messages.length === 0 ? (
-              <IntentForm value={intent} onChange={setIntent} onSubmit={start} loading={loading} />
+              <IntentForm
+                value={intent}
+                onChange={(v) => museStore.setState({ intent: v })}
+                onSubmit={start}
+                loading={loading}
+              />
             ) : pending?.kind === 'ask' ? (
               <ClarifyingQuestions
                 questions={pending.questions}
                 answers={answers}
-                onSelect={(qi, label) => setAnswers((a) => ({ ...a, [qi]: label }))}
+                onSelect={(qi, label) =>
+                  museStore.setState((s) => ({ answers: { ...s.answers, [qi]: label } }))
+                }
                 onContinue={submitAnswers}
                 loading={loading}
                 allAnswered={allAnswered}
@@ -405,7 +400,7 @@ export function MuseOverlay() {
       {showRevertConfirm && (
         <RevertConfirmDialog
           onConfirm={revertToOriginal}
-          onCancel={() => setShowRevertConfirm(false)}
+          onCancel={() => museStore.setState({ showRevertConfirm: false })}
           loading={historyLoading}
         />
       )}

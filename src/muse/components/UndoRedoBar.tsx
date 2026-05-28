@@ -12,10 +12,10 @@ type Props = {
 
 export function UndoRedoBar({ canUndo, canRedo, loading, onUndo, onRedo, onRevert }: Props) {
   return (
-    <div className="pointer-events-auto flex items-center gap-0.5 rounded-2xl bg-ink/95 px-1.5 py-1.5 shadow-xl shadow-black/40 ring-1 ring-white/10 backdrop-blur-xl">
+    <div className="pointer-events-auto flex items-center gap-0.5 rounded-2xl bg-surface/95 px-1.5 py-1.5 shadow-xl shadow-black/40 ring-1 ring-line/10 backdrop-blur-xl">
       <HistoryBtn onClick={onUndo} disabled={!canUndo || loading} label="Undo" icon={<ArrowUUpLeft size={15} />} />
       <HistoryBtn onClick={onRedo} disabled={!canRedo || loading} label="Redo" icon={<ArrowUUpRight size={15} />} />
-      <div className="mx-1.5 h-3.5 w-px bg-white/10" />
+      <div className="mx-1.5 h-3.5 w-px bg-line/10" />
       <HistoryBtn
         onClick={onRevert}
         disabled={!canUndo || loading}
@@ -49,7 +49,7 @@ function HistoryBtn({
       className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-30 ${
         danger
           ? 'text-rose-400 hover:bg-rose-500/10 hover:text-rose-300'
-          : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+          : 'text-fg-muted hover:bg-line/5 hover:text-fg'
       }`}
     >
       {icon}

@@ -13,7 +13,7 @@ export function IntentForm({
 }) {
   return (
     <div className="space-y-3">
-      <p className="text-sm text-zinc-400">What would you like to change?</p>
+      <p className="text-sm text-fg-muted">What would you like to change?</p>
       <textarea
         data-testid="muse-intent"
         value={value}
@@ -23,7 +23,7 @@ export function IntentForm({
         }}
         rows={3}
         placeholder="e.g. make this feel more premium"
-        className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-accent focus:ring-2 focus:ring-accent/25"
+        className="w-full resize-none rounded-xl border border-line/10 bg-line/[0.04] p-3 text-sm text-fg outline-none transition placeholder:text-fg-faint focus:border-accent focus:ring-2 focus:ring-accent/25"
       />
       <PrimaryButton
         testId="muse-ask"
